@@ -2,7 +2,6 @@
 <html lang="da">
 <head>
     <meta charset="UTF-8">
-    <!-- VIGTIGT for mobilvisning: -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>My Dashboard</title>
     
@@ -128,7 +127,8 @@
             </header>
 
             <!-- App Grid -->
-            <div id="appGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 pb-20">
+            <!-- Opdateret til lidt bredere kolonner, da de nu er rektangulære frem for firkantede -->
+            <div id="appGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6 pb-20">
                 <!-- Dynamisk indhold -->
             </div>
         </main>
@@ -151,7 +151,7 @@
             </div>
             <div class="flex-1 overflow-y-auto p-4 flex flex-col">
                 <div id="todoList" class="space-y-1.5 flex-1">
-                    <!-- To-Do Items -->
+                    <!-- To-Do Items genereres her -->
                 </div>
                 
                 <div class="mt-4 pt-3 border-t border-slate-100">
@@ -197,13 +197,13 @@
                     <p class="text-[11px] text-slate-400 mt-1">Gå til fontawesome.com for at finde ikoner (f.eks. 'fas fa-car').</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">App Billede (Upload)</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">App Billede/Logo (Upload)</label>
                     <input type="file" id="appImageFile" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                    <p class="text-[11px] text-slate-400 mt-1">Upload et billede. Efterlad tom for standard farve.</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Upload et billede/logo. Bliver vist i boksen til venstre.</p>
                     <div id="currentImagePreview" class="mt-3 hidden">
                         <p class="text-xs font-medium text-slate-600 mb-1">Nuværende billede:</p>
                         <div class="relative inline-block">
-                            <img id="currentImageImg" src="" class="h-24 rounded-lg border border-slate-200 object-cover shadow-sm">
+                            <img id="currentImageImg" src="" class="h-16 w-16 rounded-lg border border-slate-200 object-cover shadow-sm">
                             <button type="button" id="removeImageBtn" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow hover:bg-red-600 transition-colors" title="Fjern billede">
                                 <i class="fas fa-times text-xs"></i>
                             </button>
@@ -218,104 +218,6 @@
             </form>
         </div>
     </div>
-
-    <script>
-        // --- UI & INTERACTIONS SCRIPT ---
-        
-        // Mobile Sidebar Toggle
-        const mobileTodoBtn = document.getElementById('mobileTodoBtn');
-        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
-        const todoSidebar = document.getElementById('todoSidebar');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-        function toggleMobileSidebar() {
-            const isClosed = todoSidebar.classList.contains('translate-x-full');
-            if (isClosed) {
-                todoSidebar.classList.remove('translate-x-full');
-                sidebarOverlay.classList.remove('opacity-0', 'pointer-events-none');
-            } else {
-                todoSidebar.classList.add('translate-x-full');
-                sidebarOverlay.classList.add('opacity-0', 'pointer-events-none');
-            }
-        }
-
-        mobileTodoBtn.addEventListener('click', toggleMobileSidebar);
-        closeSidebarBtn.addEventListener('click', toggleMobileSidebar);
-        sidebarOverlay.addEventListener('click', toggleMobileSidebar);
-
-        // Desktop Resizer
-        const resizer = document.getElementById('sidebarResizer');
-        let isResizing = false;
-
-        resizer.addEventListener('mousedown', () => {
-            isResizing = true;
-            document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none';
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isResizing || window.innerWidth < 1024) return; // Only on desktop
-            let newWidth = window.innerWidth - e.clientX;
-            if (newWidth < 280) newWidth = 280;
-            if (newWidth > window.innerWidth / 2) newWidth = window.innerWidth / 2;
-            todoSidebar.style.width = `${newWidth}px`;
-        });
-
-        document.addEventListener('mouseup', () => {
-            if (isResizing) {
-                isResizing = false;
-                document.body.style.cursor = 'default';
-                document.body.style.userSelect = 'auto';
-            }
-        });
-
-        // To-Do Logic (Gemmes lokalt, da de var gemt via localStorage i originalen)
-        const todoList = document.getElementById('todoList');
-        const newTaskInput = document.getElementById('newTaskInput');
-        let todos = JSON.parse(localStorage.getItem('dashboardTodos')) || [
-            { text: "Velkommen til dit nye dashboard!", completed: false },
-            { text: "Prøv at tilføje en ny app", completed: false }
-        ];
-
-        function renderTodos() {
-            todoList.innerHTML = '';
-            todos.forEach((todo, index) => {
-                const div = document.createElement('div');
-                div.className = 'group flex items-start p-2.5 bg-white border border-slate-100 hover:border-slate-200 hover:shadow-sm rounded-xl transition-all relative';
-                div.innerHTML = `
-                    <div class="pt-0.5">
-                        <input type="checkbox" ${todo.completed ? 'checked' : ''} 
-                            class="w-4 h-4 rounded border-slate-300 cursor-pointer mr-3 mt-0.5" 
-                            onchange="toggleTodo(${index})">
-                    </div>
-                    <span class="flex-1 text-sm outline-none min-h-[20px] ${todo.completed ? 'line-through text-slate-400' : 'text-slate-700'}" 
-                          contenteditable="true" 
-                          onblur="updateTodo(${index}, this.innerText)"
-                          onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }">${todo.text}</span>
-                    <button class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition-opacity p-1 ml-2" 
-                            onclick="deleteTodo(${index})">
-                        <i class="fas fa-trash-alt text-xs"></i>
-                    </button>
-                `;
-                todoList.appendChild(div);
-            });
-        }
-
-        window.toggleTodo = (index) => { todos[index].completed = !todos[index].completed; saveTodos(); renderTodos(); };
-        window.updateTodo = (index, text) => { if (text.trim()==='') deleteTodo(index); else { todos[index].text = text; saveTodos(); } };
-        window.deleteTodo = (index) => { todos.splice(index, 1); saveTodos(); renderTodos(); };
-        function saveTodos() { localStorage.setItem('dashboardTodos', JSON.stringify(todos)); }
-
-        newTaskInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.target.value.trim() !== '') {
-                todos.push({ text: e.target.value.trim(), completed: false });
-                e.target.value = '';
-                saveTodos();
-                renderTodos();
-            }
-        });
-        renderTodos();
-    </script>
 
     <script type="module">
         // Importer Firebase 11.6.1 (Nyeste som understøttes bedst af systemet)
@@ -334,7 +236,6 @@
             appId: "1:1068932962336:web:36d844285dfa652d5a4445"
         };
 
-        // Giver appen et unikt navn for at isolere login-statussen fra andre apps på dit domæne
         const app = initializeApp(firebaseConfig, "DashboardApp");
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -342,15 +243,21 @@
 
         // State
         let apps = [];
+        let todos = []; // To-Do State (synkroniseres nu via db)
         let isEditMode = false;
         let currentUser = null;
         let firestoreUnsubscribe = null;
         let isLoginMode = true;
 
         const defaultApps = [
-            { id: '1', title: 'Danmarks Radio', url: 'https://dr.dk', icon: 'fas fa-newspaper', imageUrl: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600&q=80' },
-            { id: '2', title: 'Google', url: 'https://google.com', icon: 'fab fa-google', imageUrl: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=600&q=80' },
-            { id: '3', title: 'GitHub', url: 'https://github.com', icon: 'fab fa-github', imageUrl: 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=600&q=80' }
+            { id: '1', title: 'Danmarks Radio', url: 'https://dr.dk', icon: 'fas fa-newspaper', imageUrl: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=150&q=80' },
+            { id: '2', title: 'Google', url: 'https://google.com', icon: 'fab fa-google', imageUrl: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=150&q=80' },
+            { id: '3', title: 'GitHub', url: 'https://github.com', icon: 'fab fa-github', imageUrl: 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=150&q=80' }
+        ];
+
+        const defaultTodos = [
+            { text: "Velkommen til dit nye dashboard!", completed: false },
+            { text: "Prøv at tilføje en ny app", completed: false }
         ];
 
         // DOM
@@ -412,7 +319,6 @@
             document.getElementById('toggleAuthModeBtn').innerText = isLoginMode ? "Har du ikke en konto? Opret en." : "Har du allerede en konto? Log ind.";
         });
 
-        // Logout
         document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
 
         // Firestore Sync
@@ -420,12 +326,23 @@
             const userDocRef = doc(db, 'users', uid);
             firestoreUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
-                    apps = docSnap.data().apps || [];
+                    const data = docSnap.data();
+                    apps = data.apps || [];
+                    todos = data.todos || [];
+                    
+                    // Fallback for eksisterende brugere der måske ikke havde gemt todos endnu
+                    if (!data.todos && data.apps) {
+                        todos = [...defaultTodos];
+                        saveTodosToFirestore();
+                    }
                 } else {
                     apps = [...defaultApps];
+                    todos = [...defaultTodos];
                     saveAppsToFirestore();
+                    saveTodosToFirestore();
                 }
                 renderApps();
+                renderTodos();
             }, (error) => {
                 console.error("Kunne ikke lytte til database.", error);
                 const errorMsgBox = document.createElement('div');
@@ -438,49 +355,43 @@
 
         async function saveAppsToFirestore() {
             if (!currentUser) return;
-            try {
-                await setDoc(doc(db, 'users', currentUser.uid), { apps }, { merge: true });
-            } catch (error) {
-                console.error(error);
-            }
+            try { await setDoc(doc(db, 'users', currentUser.uid), { apps }, { merge: true }); } 
+            catch (error) { console.error(error); }
         }
 
-        // --- RENDER & PREVIEW LOGIC ---
-
-        function getFavicon(url) {
-            try {
-                const domain = new URL(url).hostname;
-                return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-            } catch {
-                return null;
-            }
+        async function saveTodosToFirestore() {
+            if (!currentUser) return;
+            try { await setDoc(doc(db, 'users', currentUser.uid), { todos }, { merge: true }); } 
+            catch (error) { console.error(error); }
         }
 
+        // --- RENDER APPS LOGIC (REKTANGULÆRE KORT) ---
         function renderApps() {
             appGrid.innerHTML = '';
             
             apps.forEach(app => {
                 const card = document.createElement('div');
+                const hasImage = app.imageUrl && app.imageUrl.trim() !== '';
                 
-                // Brug brugerens eget billede eller en standard placeholder
-                const imgSource = app.imageUrl && app.imageUrl.trim() !== '' 
-                    ? app.imageUrl 
-                    : `https://placehold.co/600x400/1e293b/ffffff?text=${encodeURIComponent(app.title)}`;
+                // Opdateret design: Rektangulært kort med flex-row struktur
+                card.className = `group relative rounded-2xl shadow-sm hover:shadow-md border border-slate-200 bg-white flex items-center p-4 transition-all duration-300 transform ${isEditMode ? '' : 'cursor-pointer hover:-translate-y-1'}`;
                 
-                card.className = `group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-slate-200 aspect-[4/3] sm:aspect-[4/3] flex flex-col transition-all duration-300 transform ${isEditMode ? '' : 'cursor-pointer hover:-translate-y-1'}`;
-                
-                // Opbyg HTML strukturen for kortet
                 card.innerHTML = `
-                    <img src="${imgSource}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.src='https://placehold.co/600x400/1e293b/ffffff?text=${encodeURIComponent(app.title)}'">
+                    <div class="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden relative mr-4 bg-slate-50 flex items-center justify-center border border-slate-100 shrink-0">
+                        ${hasImage 
+                            ? `<img src="${app.imageUrl}" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                               <div class="w-full h-full flex items-center justify-center bg-slate-50" style="display:none;">
+                                   <i class="${app.icon || 'fas fa-globe'} text-slate-400 text-xl sm:text-2xl"></i>
+                               </div>`
+                            : `<div class="w-full h-full flex items-center justify-center bg-blue-50 text-blue-500">
+                                   <i class="${app.icon || 'fas fa-globe'} text-xl sm:text-2xl"></i>
+                               </div>`
+                        }
+                    </div>
                     
-                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
-                    
-                    <div class="absolute inset-0 p-4 sm:p-5 flex flex-col justify-end z-10 text-white">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl glass flex items-center justify-center mb-3 sm:mb-4 text-lg sm:text-xl shadow-lg">
-                            <i class="${app.icon || 'fas fa-globe'} text-white"></i>
-                        </div>
-                        <h3 class="font-bold text-base sm:text-lg leading-tight mb-1 truncate">${app.title}</h3>
-                        <p class="text-xs text-slate-300 truncate opacity-80">${app.url}</p>
+                    <div class="flex-1 min-w-0 ${isEditMode ? 'pr-20' : 'pr-2'}">
+                        <h3 class="font-bold text-base sm:text-lg text-slate-800 leading-tight mb-0.5 truncate">${app.title}</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 truncate">${app.url}</p>
                     </div>
                 `;
 
@@ -488,17 +399,17 @@
                     card.onclick = () => window.open(app.url, '_blank');
                 } else {
                     const controls = document.createElement('div');
-                    controls.className = 'absolute top-3 right-3 flex gap-2 z-20';
+                    controls.className = 'absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-2 z-20';
                     controls.innerHTML = `
-                        <button class="w-8 h-8 rounded-full bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center shadow-lg transition-colors" onclick="event.stopPropagation(); window.openEditModal('${app.id}')">
+                        <button class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center justify-center shadow-sm transition-colors" onclick="event.stopPropagation(); window.openEditModal('${app.id}')">
                             <i class="fas fa-pen text-xs"></i>
                         </button>
-                        <button class="w-8 h-8 rounded-full bg-red-500 text-white hover:bg-red-600 flex items-center justify-center shadow-lg transition-colors" onclick="event.stopPropagation(); window.deleteApp('${app.id}')">
+                        <button class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center shadow-sm transition-colors" onclick="event.stopPropagation(); window.deleteApp('${app.id}')">
                             <i class="fas fa-trash text-xs"></i>
                         </button>
                     `;
                     card.appendChild(controls);
-                    card.classList.add('opacity-90');
+                    card.classList.add('opacity-95');
                 }
 
                 appGrid.appendChild(card);
@@ -506,19 +417,76 @@
 
             if (isEditMode) {
                 const addCard = document.createElement('div');
-                addCard.className = 'relative rounded-2xl border-2 border-dashed border-slate-300 bg-transparent hover:border-blue-400 hover:bg-blue-50/50 aspect-[4/3] flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-colors';
+                addCard.className = 'relative rounded-2xl border-2 border-dashed border-slate-300 bg-transparent hover:border-blue-400 hover:bg-blue-50 flex flex-row items-center p-4 cursor-pointer transition-colors';
                 addCard.onclick = () => openAppModal();
                 addCard.innerHTML = `
-                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3 text-blue-600 shadow-sm">
-                        <i class="fas fa-plus"></i>
+                    <div class="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-blue-100 flex items-center justify-center mr-4 text-blue-600 shadow-sm">
+                        <i class="fas fa-plus text-xl"></i>
                     </div>
-                    <h3 class="text-sm font-semibold text-slate-700">Tilføj ny app</h3>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-sm sm:text-base font-semibold text-slate-700">Tilføj ny app</h3>
+                    </div>
                 `;
                 appGrid.appendChild(addCard);
             }
         }
 
-        // APP EDIT/ADD MODAL LOGIC
+        // --- TO-DO LOGIC (SYNKRONISERET MED CLOUD) ---
+        const todoList = document.getElementById('todoList');
+        const newTaskInput = document.getElementById('newTaskInput');
+        
+        function renderTodos() {
+            todoList.innerHTML = '';
+            todos.forEach((todo, index) => {
+                const div = document.createElement('div');
+                div.className = 'group flex items-start p-2.5 bg-white border border-slate-100 hover:border-slate-200 hover:shadow-sm rounded-xl transition-all relative';
+                div.innerHTML = `
+                    <div class="pt-0.5">
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''} 
+                            class="w-4 h-4 rounded border-slate-300 cursor-pointer mr-3 mt-0.5" 
+                            onchange="window.toggleTodo(${index})">
+                    </div>
+                    <span class="flex-1 text-sm outline-none min-h-[20px] ${todo.completed ? 'line-through text-slate-400' : 'text-slate-700'}" 
+                          contenteditable="true" 
+                          onblur="window.updateTodo(${index}, this.innerText)"
+                          onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }">${todo.text}</span>
+                    <button class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition-opacity p-1 ml-2" 
+                            onclick="window.deleteTodo(${index})">
+                        <i class="fas fa-trash-alt text-xs"></i>
+                    </button>
+                `;
+                todoList.appendChild(div);
+            });
+        }
+
+        window.toggleTodo = (index) => { 
+            todos[index].completed = !todos[index].completed; 
+            saveTodosToFirestore(); 
+        };
+        
+        window.updateTodo = (index, text) => { 
+            if (text.trim() === '') {
+                window.deleteTodo(index); 
+            } else { 
+                todos[index].text = text; 
+                saveTodosToFirestore(); 
+            } 
+        };
+        
+        window.deleteTodo = (index) => { 
+            todos.splice(index, 1); 
+            saveTodosToFirestore(); 
+        };
+
+        newTaskInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.value.trim() !== '') {
+                todos.push({ text: e.target.value.trim(), completed: false });
+                e.target.value = '';
+                saveTodosToFirestore();
+            }
+        });
+
+        // --- APP EDIT/ADD MODAL LOGIC ---
         const appModal = document.getElementById('appModal');
         const appModalContent = document.getElementById('appModalContent');
         const appFormDom = document.getElementById('appForm');
@@ -599,7 +567,6 @@
                 let imageUrl = document.getElementById('existingImageUrl').value;
                 const fileInput = document.getElementById('appImageFile');
 
-                // Hvis brugeren har valgt et nyt billede, uploades det til Firebase Storage
                 if (fileInput.files.length > 0) {
                     const file = fileInput.files[0];
                     const fileRef = ref(storage, `users/${currentUser.uid}/app_images/${Date.now()}_${file.name}`);
@@ -653,6 +620,54 @@
                 errorMsgBox.remove();
             });
         }
+
+        // --- UI & INTERACTIONS (Sidebar, Resizer, etc.) ---
+        
+        const mobileTodoBtn = document.getElementById('mobileTodoBtn');
+        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+        const todoSidebar = document.getElementById('todoSidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function toggleMobileSidebar() {
+            const isClosed = todoSidebar.classList.contains('translate-x-full');
+            if (isClosed) {
+                todoSidebar.classList.remove('translate-x-full');
+                sidebarOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                todoSidebar.classList.add('translate-x-full');
+                sidebarOverlay.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        mobileTodoBtn.addEventListener('click', toggleMobileSidebar);
+        closeSidebarBtn.addEventListener('click', toggleMobileSidebar);
+        sidebarOverlay.addEventListener('click', toggleMobileSidebar);
+
+        // Desktop Resizer
+        const resizer = document.getElementById('sidebarResizer');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', () => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing || window.innerWidth < 1024) return;
+            let newWidth = window.innerWidth - e.clientX;
+            if (newWidth < 280) newWidth = 280;
+            if (newWidth > window.innerWidth / 2) newWidth = window.innerWidth / 2;
+            todoSidebar.style.width = `${newWidth}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = 'default';
+                document.body.style.userSelect = 'auto';
+            }
+        });
 
         // Toggle Edit Mode
         const toggleEditBtn = document.getElementById('toggleEditBtn');
