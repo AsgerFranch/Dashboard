@@ -12,7 +12,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
+            background-color: #ffffff; /* Renere hvid baggrund som referencen */
             color: #1e293b;
             -webkit-tap-highlight-color: transparent;
         }
@@ -40,21 +40,33 @@
         /* Sidebar transition for mobile */
         .sidebar-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         
-        /* Glassmorphism utilities */
-        .glass {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        /* Abstract icon overlays for reference match */
+        .icon-overlay-wave {
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background: rgba(255,255,255,0.15);
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+            top: -20%;
+            left: -20%;
+            pointer-events: none;
+        }
+        .icon-overlay-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(255,255,255,0.1) 100%);
+            border-radius: inherit;
+            pointer-events: none;
         }
     </style>
 </head>
-<body class="h-screen w-full antialiased flex overflow-hidden bg-slate-50">
+<body class="h-screen w-full antialiased flex overflow-hidden bg-white">
 
     <!-- INITIAL LOADING SCREEN -->
     <div id="loadingScreen" class="absolute inset-0 bg-white z-[100] flex flex-col items-center justify-center transition-opacity duration-300">
         <div class="loader mb-4"></div>
-        <p class="text-slate-500 font-medium text-sm animate-pulse">Forbinder til skyen...</p>
+        <p class="text-slate-500 font-medium text-sm animate-pulse">Forbinder til databasen...</p>
     </div>
 
     <!-- AUTHENTICATION VIEW -->
@@ -97,67 +109,66 @@
     <div id="dashboardView" class="flex-1 flex w-full h-full relative hidden">
         
         <!-- Center Content -->
-        <main class="flex-1 overflow-y-auto flex flex-col py-6 px-4 sm:py-10 sm:px-8 relative w-full transition-all">
+        <main class="flex-1 overflow-y-auto flex flex-col py-6 px-4 sm:py-10 sm:px-8 lg:px-12 relative w-full transition-all">
             
             <!-- Header -->
-            <header class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
+            <header class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4 pb-4 border-b border-slate-100">
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Dashboard</h1>
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Oversigt</h1>
                     <p class="text-sm text-slate-500 mt-1 flex items-center gap-2">
                         <span id="syncStatus" class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span> 
-                        <span id="userStatusText">Synkroniseret</span>
+                        <span id="userStatusText">Database synkroniseret</span>
                     </p>
                 </div>
                 
                 <div class="flex flex-wrap gap-2 sm:gap-3">
                     <button id="addAppBtnHeader" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-blue-600 text-white font-medium text-xs sm:text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-600/20 flex items-center gap-2 hidden">
-                        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tilføj App</span>
+                        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tilføj Ement</span>
                     </button>
-                    <button id="toggleEditBtn" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-medium text-xs sm:text-sm hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2">
+                    <button id="toggleEditBtn" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs sm:text-sm hover:bg-slate-100 transition-colors flex items-center gap-2">
                         <i class="fas fa-pen"></i> <span class="hidden sm:inline">Rediger</span>
                     </button>
                     <!-- Mobile To-Do Toggle -->
-                    <button id="mobileTodoBtn" class="lg:hidden px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2">
+                    <button id="mobileTodoBtn" class="lg:hidden px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors flex items-center gap-2">
                         <i class="fas fa-check-square"></i>
                     </button>
-                    <button id="logoutBtn" class="px-4 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 hover:bg-slate-200 transition-colors flex items-center gap-2" title="Log ud">
+                    <button id="logoutBtn" class="px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors flex items-center gap-2" title="Log ud">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
             </header>
 
-            <!-- App Grid -->
-            <!-- Opdateret til lidt bredere kolonner, da de nu er rektangulære frem for firkantede -->
-            <div id="appGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6 pb-20">
+            <!-- App List (Opdateret til at matche referencen) -->
+            <div id="appGrid" class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-y-2 gap-x-6 pb-20">
                 <!-- Dynamisk indhold -->
             </div>
         </main>
 
         <!-- Resizer (Desktop only) -->
-        <div id="sidebarResizer" class="hidden lg:block w-1 bg-transparent hover:bg-blue-400 cursor-col-resize transition-colors z-40 relative"></div>
+        <div id="sidebarResizer" class="hidden lg:block w-1 bg-transparent hover:bg-slate-200 cursor-col-resize transition-colors z-40 relative"></div>
 
         <!-- Mobile Overlay -->
         <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 lg:hidden opacity-0 pointer-events-none transition-opacity duration-300"></div>
 
         <!-- TO-DO SIDEBAR -->
-        <aside id="todoSidebar" class="fixed lg:relative top-0 right-0 h-full w-4/5 max-w-sm lg:w-[320px] bg-white z-50 lg:z-30 shadow-2xl lg:shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.03)] border-l border-slate-100 flex flex-col sidebar-transition translate-x-full lg:translate-x-0">
-            <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <aside id="todoSidebar" class="fixed lg:relative top-0 right-0 h-full w-4/5 max-w-sm lg:w-[320px] bg-slate-50/50 z-50 lg:z-30 shadow-2xl lg:shadow-none border-l border-slate-100 flex flex-col sidebar-transition translate-x-full lg:translate-x-0">
+            <div class="px-5 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
                 <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fas fa-check-circle text-blue-500"></i> Opgaver
+                    <i class="fas fa-check-circle text-blue-600"></i> Synkroniseret To-Do
                 </h2>
                 <button id="closeSidebarBtn" class="lg:hidden w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:text-slate-800">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="flex-1 overflow-y-auto p-4 flex flex-col">
-                <div id="todoList" class="space-y-1.5 flex-1">
+                <div id="todoList" class="space-y-2 flex-1">
                     <!-- To-Do Items genereres her -->
                 </div>
                 
-                <div class="mt-4 pt-3 border-t border-slate-100">
-                    <div class="flex items-center bg-slate-50 rounded-xl px-3 py-2 border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
-                        <i class="fas fa-plus text-slate-400 text-xs mr-2"></i>
-                        <input type="text" id="newTaskInput" class="bg-transparent outline-none text-sm text-slate-700 w-full placeholder-slate-400 py-1" placeholder="Ny opgave...">
+                <div class="mt-4 pt-4 border-t border-slate-200">
+                    <div class="flex items-center bg-white rounded-xl px-4 py-3 border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 shadow-sm transition-all">
+                        <i class="fas fa-plus text-slate-400 text-sm mr-3"></i>
+                        <input type="text" id="newTaskInput" class="bg-transparent outline-none text-sm text-slate-700 w-full placeholder-slate-400" placeholder="Tilføj en opgave...">
                     </div>
                 </div>
             </div>
@@ -165,10 +176,10 @@
     </div>
 
     <!-- ADD/EDIT APP MODAL -->
-    <div id="appModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center z-[80] p-4">
-        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300" id="appModalContent">
+    <div id="appModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center z-[80] p-4">
+        <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300" id="appModalContent">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h3 class="text-lg font-bold text-slate-800" id="modalTitle">Tilføj App</h3>
+                <h3 class="text-lg font-bold text-slate-800" id="modalTitle">Tilføj Element</h3>
                 <button id="closeAppModalBtn" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
                     <i class="fas fa-times"></i>
                 </button>
@@ -177,12 +188,16 @@
             <form id="appForm" class="p-6 space-y-4">
                 <input type="hidden" id="appId">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">App Titel</label>
-                    <input type="text" id="appName" required placeholder="f.eks. DR Nyheder" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Titel</label>
+                    <input type="text" id="appName" required placeholder="f.eks. Stocks" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Webadresse (URL)</label>
-                    <input type="text" id="appUrl" required placeholder="/Plante-Organisation/ eller https://..." class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Beskrivelse (Undertekst)</label>
+                    <input type="text" id="appDescription" required placeholder="f.eks. Shares of public companies" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Handling (URL)</label>
+                    <input type="text" id="appUrl" required placeholder="https://..." class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1.5 flex justify-between">
@@ -190,20 +205,18 @@
                     </label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i id="iconPreview" class="fas fa-globe text-slate-400 text-lg"></i>
+                            <i id="iconPreview" class="fas fa-chart-line text-slate-400 text-lg"></i>
                         </div>
-                        <input type="text" id="appIcon" placeholder="fas fa-newspaper" class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
+                        <input type="text" id="appIcon" placeholder="fas fa-chart-line" class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
                     </div>
-                    <p class="text-[11px] text-slate-400 mt-1">Gå til fontawesome.com for at finde ikoner (f.eks. 'fas fa-car').</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">App Billede/Logo (Upload)</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Billede (Valgfrit - erstatter farvet ikon)</label>
                     <input type="file" id="appImageFile" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                    <p class="text-[11px] text-slate-400 mt-1">Upload et billede/logo. Bliver vist i boksen til venstre.</p>
                     <div id="currentImagePreview" class="mt-3 hidden">
                         <p class="text-xs font-medium text-slate-600 mb-1">Nuværende billede:</p>
                         <div class="relative inline-block">
-                            <img id="currentImageImg" src="" class="h-16 w-16 rounded-lg border border-slate-200 object-cover shadow-sm">
+                            <img id="currentImageImg" src="" class="h-16 w-16 rounded-xl border border-slate-200 object-cover shadow-sm">
                             <button type="button" id="removeImageBtn" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow hover:bg-red-600 transition-colors" title="Fjern billede">
                                 <i class="fas fa-times text-xs"></i>
                             </button>
@@ -213,14 +226,13 @@
                 </div>
                 <div class="flex justify-end gap-3 pt-4">
                     <button type="button" id="cancelAppBtn" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">Annuller</button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 transition-colors shadow-sm">Gem App</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 transition-colors shadow-sm">Gem</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script type="module">
-        // Importer Firebase 11.6.1 (Nyeste som understøttes bedst af systemet)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -243,21 +255,32 @@
 
         // State
         let apps = [];
-        let todos = []; // To-Do State (synkroniseres nu via db)
+        let todos = []; 
         let isEditMode = false;
         let currentUser = null;
         let firestoreUnsubscribe = null;
         let isLoginMode = true;
 
+        // Theme colors til at matche referencen
+        const themes = [
+            { bg: '#237bd1', iconColor: 'text-white' }, // Blue (Stocks)
+            { bg: '#5a4970', iconColor: 'text-white' }, // Purple (Mutual funds)
+            { bg: '#d49b8a', iconColor: 'text-white' }, // Peach (Currency)
+            { bg: '#954c6c', iconColor: 'text-white' }, // Maroon (Bonds)
+            { bg: '#2b9d62', iconColor: 'text-white' }  // Green (Backup)
+        ];
+
+        // Standard apps opdateret til at matche referencebilledets data!
         const defaultApps = [
-            { id: '1', title: 'Danmarks Radio', url: 'https://dr.dk', icon: 'fas fa-newspaper', imageUrl: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=150&q=80' },
-            { id: '2', title: 'Google', url: 'https://google.com', icon: 'fab fa-google', imageUrl: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=150&q=80' },
-            { id: '3', title: 'GitHub', url: 'https://github.com', icon: 'fab fa-github', imageUrl: 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=150&q=80' }
+            { id: '1', title: 'Stocks', description: 'Shares of public companies', url: '#', icon: 'fas fa-chart-line', imageUrl: '' },
+            { id: '2', title: 'Mutual funds', description: 'Ready-made portfolios at affordable prices', url: '#', icon: 'fas fa-chart-pie', imageUrl: '' },
+            { id: '3', title: 'Currency', description: 'Currency trading at the exchange rate', url: '#', icon: 'fas fa-coins', imageUrl: '' },
+            { id: '4', title: 'Bonds', description: 'Lend your funds to companies', url: '#', icon: 'fas fa-file-invoice-dollar', imageUrl: '' }
         ];
 
         const defaultTodos = [
-            { text: "Velkommen til dit nye dashboard!", completed: false },
-            { text: "Prøv at tilføje en ny app", completed: false }
+            { text: "Tjek markedets åbningstider", completed: false },
+            { text: "Gennemgå porteføljeudbytte", completed: false }
         ];
 
         // DOM
@@ -277,7 +300,7 @@
                 authView.classList.remove('flex');
                 dashboardView.classList.remove('hidden');
                 
-                document.getElementById('userStatusText').innerText = "Synkroniseret i skyen";
+                document.getElementById('userStatusText').innerText = "Synkroniseret med database";
                 document.getElementById('syncStatus').className = "w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]";
                 
                 startSync(user.uid);
@@ -290,7 +313,6 @@
             }
         });
 
-        // Form Submission
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('authEmail').value;
@@ -311,7 +333,6 @@
             }
         });
 
-        // Toggle Auth Mode
         document.getElementById('toggleAuthModeBtn').addEventListener('click', () => {
             isLoginMode = !isLoginMode;
             document.getElementById('authTitle').innerText = isLoginMode ? "Velkommen" : "Opret Konto";
@@ -321,7 +342,7 @@
 
         document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
 
-        // Firestore Sync
+        // Firestore Sync - Begge lister synkroniseres her!
         function startSync(uid) {
             const userDocRef = doc(db, 'users', uid);
             firestoreUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
@@ -330,7 +351,7 @@
                     apps = data.apps || [];
                     todos = data.todos || [];
                     
-                    // Fallback for eksisterende brugere der måske ikke havde gemt todos endnu
+                    // Fallback for eksisterende data uden de nye felter
                     if (!data.todos && data.apps) {
                         todos = [...defaultTodos];
                         saveTodosToFirestore();
@@ -345,11 +366,6 @@
                 renderTodos();
             }, (error) => {
                 console.error("Kunne ikke lytte til database.", error);
-                const errorMsgBox = document.createElement('div');
-                errorMsgBox.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-[100]';
-                errorMsgBox.innerText = "Kunne ikke synkronisere. Tjek database regler.";
-                document.body.appendChild(errorMsgBox);
-                setTimeout(() => errorMsgBox.remove(), 4000);
             });
         }
 
@@ -359,57 +375,61 @@
             catch (error) { console.error(error); }
         }
 
+        // To-Do specifik gemmefunktion for synkronisering
         async function saveTodosToFirestore() {
             if (!currentUser) return;
             try { await setDoc(doc(db, 'users', currentUser.uid), { todos }, { merge: true }); } 
             catch (error) { console.error(error); }
         }
 
-        // --- RENDER APPS LOGIC (REKTANGULÆRE KORT) ---
         function renderApps() {
             appGrid.innerHTML = '';
             
-            apps.forEach(app => {
+            apps.forEach((app, index) => {
                 const card = document.createElement('div');
                 const hasImage = app.imageUrl && app.imageUrl.trim() !== '';
+                const theme = themes[index % themes.length];
                 
-                // Opdateret design: Rektangulært kort med flex-row struktur
-                card.className = `group relative rounded-2xl shadow-sm hover:shadow-md border border-slate-200 bg-white flex items-center p-4 transition-all duration-300 transform ${isEditMode ? '' : 'cursor-pointer hover:-translate-y-1'}`;
+                // Opdateret design: Ren liste (flex-row), matchende referencen
+                card.className = `group relative flex items-center p-3 rounded-2xl transition-colors duration-200 ${isEditMode ? 'bg-slate-50' : 'hover:bg-slate-50 cursor-pointer'}`;
                 
+                let iconHtml = '';
+                if (hasImage) {
+                    iconHtml = `<img src="${app.imageUrl}" class="absolute inset-0 w-full h-full object-cover z-10">`;
+                } else {
+                    // Generer det flotte "squircle" reference ikon
+                    iconHtml = `
+                        <div class="icon-overlay-circle"></div>
+                        <div class="icon-overlay-wave"></div>
+                        <i class="${app.icon || 'fas fa-chart-line'} ${theme.iconColor} text-2xl relative z-10"></i>
+                    `;
+                }
+
                 card.innerHTML = `
-                    <div class="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden relative mr-4 bg-slate-50 flex items-center justify-center border border-slate-100 shrink-0">
-                        ${hasImage 
-                            ? `<img src="${app.imageUrl}" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                               <div class="w-full h-full flex items-center justify-center bg-slate-50" style="display:none;">
-                                   <i class="${app.icon || 'fas fa-globe'} text-slate-400 text-xl sm:text-2xl"></i>
-                               </div>`
-                            : `<div class="w-full h-full flex items-center justify-center bg-blue-50 text-blue-500">
-                                   <i class="${app.icon || 'fas fa-globe'} text-xl sm:text-2xl"></i>
-                               </div>`
-                        }
+                    <div class="flex-shrink-0 w-[60px] h-[60px] rounded-[1.1rem] overflow-hidden relative mr-4 flex items-center justify-center shadow-sm" style="background-color: ${hasImage ? '#f8fafc' : theme.bg};">
+                        ${iconHtml}
                     </div>
                     
-                    <div class="flex-1 min-w-0 ${isEditMode ? 'pr-20' : 'pr-2'}">
-                        <h3 class="font-bold text-base sm:text-lg text-slate-800 leading-tight mb-0.5 truncate">${app.title}</h3>
-                        <p class="text-xs sm:text-sm text-slate-500 truncate">${app.url}</p>
+                    <div class="flex-1 min-w-0 flex flex-col justify-center ${isEditMode ? 'pr-20' : 'pr-2'}">
+                        <h3 class="font-[600] text-[17px] text-[#1a1a1a] mb-0.5 truncate tracking-tight">${app.title}</h3>
+                        <p class="text-[14.5px] text-[#5e5e5e] truncate">${app.description || app.url || 'Ingen beskrivelse'}</p>
                     </div>
                 `;
 
                 if (!isEditMode) {
-                    card.onclick = () => window.open(app.url, '_blank');
+                    card.onclick = () => { if(app.url && app.url !== '#') window.open(app.url, '_blank'); };
                 } else {
                     const controls = document.createElement('div');
                     controls.className = 'absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-2 z-20';
                     controls.innerHTML = `
-                        <button class="w-8 h-8 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center justify-center shadow-sm transition-colors" onclick="event.stopPropagation(); window.openEditModal('${app.id}')">
+                        <button class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center shadow-sm transition-colors" onclick="event.stopPropagation(); window.openEditModal('${app.id}')">
                             <i class="fas fa-pen text-xs"></i>
                         </button>
-                        <button class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center shadow-sm transition-colors" onclick="event.stopPropagation(); window.deleteApp('${app.id}')">
+                        <button class="w-8 h-8 rounded-full bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 flex items-center justify-center shadow-sm transition-colors" onclick="event.stopPropagation(); window.deleteApp('${app.id}')">
                             <i class="fas fa-trash text-xs"></i>
                         </button>
                     `;
                     card.appendChild(controls);
-                    card.classList.add('opacity-95');
                 }
 
                 appGrid.appendChild(card);
@@ -417,21 +437,20 @@
 
             if (isEditMode) {
                 const addCard = document.createElement('div');
-                addCard.className = 'relative rounded-2xl border-2 border-dashed border-slate-300 bg-transparent hover:border-blue-400 hover:bg-blue-50 flex flex-row items-center p-4 cursor-pointer transition-colors';
+                addCard.className = 'relative flex items-center p-3 rounded-2xl transition-colors duration-200 hover:bg-blue-50/50 cursor-pointer border-2 border-dashed border-slate-200 mt-2';
                 addCard.onclick = () => openAppModal();
                 addCard.innerHTML = `
-                    <div class="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-blue-100 flex items-center justify-center mr-4 text-blue-600 shadow-sm">
+                    <div class="flex-shrink-0 w-[60px] h-[60px] rounded-[1.1rem] bg-slate-50 border border-slate-200 flex items-center justify-center mr-4 text-slate-400">
                         <i class="fas fa-plus text-xl"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <h3 class="text-sm sm:text-base font-semibold text-slate-700">Tilføj ny app</h3>
+                        <h3 class="text-[16px] font-[500] text-slate-700">Tilføj nyt element</h3>
                     </div>
                 `;
                 appGrid.appendChild(addCard);
             }
         }
 
-        // --- TO-DO LOGIC (SYNKRONISERET MED CLOUD) ---
         const todoList = document.getElementById('todoList');
         const newTaskInput = document.getElementById('newTaskInput');
         
@@ -439,14 +458,14 @@
             todoList.innerHTML = '';
             todos.forEach((todo, index) => {
                 const div = document.createElement('div');
-                div.className = 'group flex items-start p-2.5 bg-white border border-slate-100 hover:border-slate-200 hover:shadow-sm rounded-xl transition-all relative';
+                div.className = 'group flex items-start p-3 bg-white border border-slate-100 hover:border-blue-100/50 rounded-xl transition-all relative';
                 div.innerHTML = `
                     <div class="pt-0.5">
                         <input type="checkbox" ${todo.completed ? 'checked' : ''} 
                             class="w-4 h-4 rounded border-slate-300 cursor-pointer mr-3 mt-0.5" 
                             onchange="window.toggleTodo(${index})">
                     </div>
-                    <span class="flex-1 text-sm outline-none min-h-[20px] ${todo.completed ? 'line-through text-slate-400' : 'text-slate-700'}" 
+                    <span class="flex-1 text-[14.5px] outline-none min-h-[20px] ${todo.completed ? 'line-through text-slate-400' : 'text-slate-700'}" 
                           contenteditable="true" 
                           onblur="window.updateTodo(${index}, this.innerText)"
                           onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }">${todo.text}</span>
@@ -459,6 +478,7 @@
             });
         }
 
+        // Disse funktioner kalder saveTodosToFirestore hver gang der sker en ændring
         window.toggleTodo = (index) => { 
             todos[index].completed = !todos[index].completed; 
             saveTodosToFirestore(); 
@@ -486,7 +506,6 @@
             }
         });
 
-        // --- APP EDIT/ADD MODAL LOGIC ---
         const appModal = document.getElementById('appModal');
         const appModalContent = document.getElementById('appModalContent');
         const appFormDom = document.getElementById('appForm');
@@ -503,15 +522,16 @@
             const existingImageUrl = document.getElementById('existingImageUrl');
             const appImageFile = document.getElementById('appImageFile');
             
-            appImageFile.value = ''; // Nulstil fil-input
+            appImageFile.value = ''; 
 
             if (app) {
-                document.getElementById('modalTitle').textContent = 'Rediger App';
+                document.getElementById('modalTitle').textContent = 'Rediger Element';
                 document.getElementById('appId').value = app.id;
                 document.getElementById('appName').value = app.title;
+                document.getElementById('appDescription').value = app.description || '';
                 document.getElementById('appUrl').value = app.url;
                 document.getElementById('appIcon').value = app.icon || '';
-                document.getElementById('iconPreview').className = app.icon || 'fas fa-globe';
+                document.getElementById('iconPreview').className = app.icon || 'fas fa-chart-line';
                 
                 if (app.imageUrl) {
                     existingImageUrl.value = app.imageUrl;
@@ -522,12 +542,12 @@
                     currentImagePreview.classList.add('hidden');
                 }
             } else {
-                document.getElementById('modalTitle').textContent = 'Tilføj Ny App';
+                document.getElementById('modalTitle').textContent = 'Tilføj Nyt Element';
                 appFormDom.reset();
                 document.getElementById('appId').value = '';
                 existingImageUrl.value = '';
                 currentImagePreview.classList.add('hidden');
-                document.getElementById('iconPreview').className = 'fas fa-globe text-slate-400 text-lg';
+                document.getElementById('iconPreview').className = 'fas fa-chart-line text-slate-400 text-lg';
             }
             appModal.classList.remove('opacity-0', 'pointer-events-none');
             appModalContent.classList.remove('scale-95');
@@ -547,7 +567,7 @@
         });
 
         document.getElementById('appIcon').addEventListener('input', (e) => {
-            document.getElementById('iconPreview').className = e.target.value || 'fas fa-globe text-slate-400 text-lg';
+            document.getElementById('iconPreview').className = e.target.value || 'fas fa-chart-line text-slate-400 text-lg';
         });
 
         appFormDom.addEventListener('submit', async (e) => {
@@ -561,8 +581,9 @@
             try {
                 const id = document.getElementById('appId').value;
                 const title = document.getElementById('appName').value.trim();
+                const description = document.getElementById('appDescription').value.trim();
                 const url = document.getElementById('appUrl').value.trim();
-                const icon = document.getElementById('appIcon').value.trim() || 'fas fa-globe';
+                const icon = document.getElementById('appIcon').value.trim() || 'fas fa-chart-line';
                 
                 let imageUrl = document.getElementById('existingImageUrl').value;
                 const fileInput = document.getElementById('appImageFile');
@@ -576,20 +597,16 @@
 
                 if (id) {
                     const index = apps.findIndex(a => a.id === id);
-                    if (index !== -1) apps[index] = { id, title, url, icon, imageUrl };
+                    if (index !== -1) apps[index] = { id, title, description, url, icon, imageUrl };
                 } else {
-                    apps.push({ id: Date.now().toString(), title, url, icon, imageUrl });
+                    apps.push({ id: Date.now().toString(), title, description, url, icon, imageUrl });
                 }
 
                 await saveAppsToFirestore();
                 closeAppModal();
             } catch (error) {
                 console.error("Fejl ved gemning:", error);
-                const errorMsgBox = document.createElement('div');
-                errorMsgBox.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-[100]';
-                errorMsgBox.innerText = "Fejl under upload. Tjek Firebase Storage regler.";
-                document.body.appendChild(errorMsgBox);
-                setTimeout(() => errorMsgBox.remove(), 4000);
+                alert("Der opstod en fejl. Tjek venligst din forbindelse.");
             } finally {
                 submitBtn.innerText = originalBtnText;
                 submitBtn.disabled = false;
@@ -597,32 +614,10 @@
         });
 
         window.deleteApp = (id) => {
-            const errorMsgBox = document.createElement('div');
-            errorMsgBox.className = 'fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4';
-            errorMsgBox.innerHTML = `
-                <div class="bg-white p-6 rounded-3xl shadow-xl max-w-sm w-full text-center">
-                    <div class="w-14 h-14 rounded-full bg-red-100 text-red-500 mx-auto flex items-center justify-center text-2xl mb-4">
-                        <i class="fas fa-trash-alt"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-2">Slet app?</h3>
-                    <p class="text-slate-500 mb-6 text-sm">Er du sikker på, at du vil fjerne denne app fra dit dashboard?</p>
-                    <div class="flex gap-3 justify-center">
-                        <button class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors w-full" onclick="this.parentElement.parentElement.parentElement.remove()">Annuller</button>
-                        <button class="px-5 py-2.5 rounded-xl bg-red-500 text-white font-medium text-sm hover:bg-red-600 transition-colors shadow-sm w-full" id="confirmDeleteBtn_${id}">Slet</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(errorMsgBox);
-            
-            document.getElementById(`confirmDeleteBtn_${id}`).addEventListener('click', () => {
-                apps = apps.filter(app => app.id !== id);
-                saveAppsToFirestore();
-                errorMsgBox.remove();
-            });
+            apps = apps.filter(app => app.id !== id);
+            saveAppsToFirestore();
         }
 
-        // --- UI & INTERACTIONS (Sidebar, Resizer, etc.) ---
-        
         const mobileTodoBtn = document.getElementById('mobileTodoBtn');
         const closeSidebarBtn = document.getElementById('closeSidebarBtn');
         const todoSidebar = document.getElementById('todoSidebar');
@@ -676,13 +671,15 @@
         toggleEditBtn.addEventListener('click', () => {
             isEditMode = !isEditMode;
             if (isEditMode) {
-                toggleEditBtn.classList.replace('bg-white', 'bg-blue-100');
+                toggleEditBtn.classList.replace('bg-slate-50', 'bg-blue-100');
                 toggleEditBtn.classList.replace('text-slate-700', 'text-blue-700');
+                toggleEditBtn.classList.replace('border-slate-200', 'border-blue-200');
                 toggleEditBtn.innerHTML = '<i class="fas fa-check"></i> <span class="hidden sm:inline">Færdig</span>';
                 addAppBtnHeader.classList.remove('hidden');
             } else {
-                toggleEditBtn.classList.replace('bg-blue-100', 'bg-white');
+                toggleEditBtn.classList.replace('bg-blue-100', 'bg-slate-50');
                 toggleEditBtn.classList.replace('text-blue-700', 'text-slate-700');
+                toggleEditBtn.classList.replace('border-blue-200', 'border-slate-200');
                 toggleEditBtn.innerHTML = '<i class="fas fa-pen"></i> <span class="hidden sm:inline">Rediger</span>';
                 addAppBtnHeader.classList.add('hidden');
             }
