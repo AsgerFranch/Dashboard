@@ -164,40 +164,6 @@
         </aside>
     </div>
 
-    <!-- PREVIEW IFRAME MODAL -->
-    <div id="previewModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center z-[70] p-2 sm:p-6">
-        <div class="bg-white w-full h-full sm:h-[90vh] sm:max-w-6xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden transform scale-95 transition-transform duration-300" id="previewModalContent">
-            
-            <!-- Modal Header -->
-            <div class="h-14 bg-slate-900 text-white flex justify-between items-center px-4 shrink-0">
-                <div class="flex items-center gap-3 overflow-hidden">
-                    <i id="previewIcon" class="fas fa-globe text-slate-300"></i>
-                    <h3 id="previewTitle" class="font-medium text-sm truncate">Preview</h3>
-                </div>
-                <div class="flex items-center gap-1 sm:gap-2 shrink-0">
-                    <button id="previewNewTabBtn" class="px-3 py-1.5 hover:bg-slate-800 rounded-lg transition-colors text-xs flex items-center gap-2 border border-slate-700">
-                        <i class="fas fa-external-link-alt"></i> <span class="hidden sm:inline">Åbn rigtigt</span>
-                    </button>
-                    <button id="closePreviewBtn" class="w-8 h-8 flex items-center justify-center hover:bg-slate-800 rounded-lg transition-colors text-lg ml-1">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Modal Body (Iframe) -->
-            <div class="flex-1 bg-slate-100 relative w-full h-full">
-                <!-- Loader inside preview -->
-                <div id="previewLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 z-20">
-                    <div class="loader mb-3"></div>
-                    <span class="text-sm text-slate-500 font-medium">Henter hjemmeside...</span>
-                    <span class="text-xs text-slate-400 mt-2 max-w-xs text-center px-4">Hvis siden forbliver hvid, tillader den ikke indlejring. Brug "Åbn rigtigt" knappen øverst.</span>
-                </div>
-                <!-- Iframe -->
-                <iframe id="previewIframe" class="w-full h-full relative z-10 border-none bg-white" src="" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
-            </div>
-        </div>
-    </div>
-
     <!-- ADD/EDIT APP MODAL -->
     <div id="appModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center z-[80] p-4">
         <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300" id="appModalContent">
@@ -229,6 +195,21 @@
                         <input type="text" id="appIcon" placeholder="fas fa-newspaper" class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
                     </div>
                     <p class="text-[11px] text-slate-400 mt-1">Gå til fontawesome.com for at finde ikoner (f.eks. 'fas fa-car').</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">App Billede (Upload)</label>
+                    <input type="file" id="appImageFile" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                    <p class="text-[11px] text-slate-400 mt-1">Upload et billede. Efterlad tom for standard farve.</p>
+                    <div id="currentImagePreview" class="mt-3 hidden">
+                        <p class="text-xs font-medium text-slate-600 mb-1">Nuværende billede:</p>
+                        <div class="relative inline-block">
+                            <img id="currentImageImg" src="" class="h-24 rounded-lg border border-slate-200 object-cover shadow-sm">
+                            <button type="button" id="removeImageBtn" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow hover:bg-red-600 transition-colors" title="Fjern billede">
+                                <i class="fas fa-times text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="existingImageUrl">
                 </div>
                 <div class="flex justify-end gap-3 pt-4">
                     <button type="button" id="cancelAppBtn" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">Annuller</button>
@@ -341,6 +322,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCqEJ5yRtTB1KjAG0RmnEsDNiXFJBKwUxo",
@@ -355,6 +337,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
         // State
         let apps = [];
@@ -364,9 +347,9 @@
         let isLoginMode = true;
 
         const defaultApps = [
-            { id: '1', title: 'Danmarks Radio', url: 'https://dr.dk', icon: 'fas fa-newspaper' },
-            { id: '2', title: 'Google', url: 'https://google.com', icon: 'fab fa-google' },
-            { id: '3', title: 'GitHub', url: 'https://github.com', icon: 'fab fa-github' }
+            { id: '1', title: 'Danmarks Radio', url: 'https://dr.dk', icon: 'fas fa-newspaper', imageUrl: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600&q=80' },
+            { id: '2', title: 'Google', url: 'https://google.com', icon: 'fab fa-google', imageUrl: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=600&q=80' },
+            { id: '3', title: 'GitHub', url: 'https://github.com', icon: 'fab fa-github', imageUrl: 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=600&q=80' }
         ];
 
         // DOM
@@ -444,7 +427,11 @@
                 renderApps();
             }, (error) => {
                 console.error("Kunne ikke lytte til database.", error);
-                alert("Kunne ikke synkronisere data. Tjek dine Firestore sikkerhedsregler.");
+                const errorMsgBox = document.createElement('div');
+                errorMsgBox.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-[100]';
+                errorMsgBox.innerText = "Kunne ikke synkronisere. Tjek database regler.";
+                document.body.appendChild(errorMsgBox);
+                setTimeout(() => errorMsgBox.remove(), 4000);
             });
         }
 
@@ -473,15 +460,17 @@
             
             apps.forEach(app => {
                 const card = document.createElement('div');
-                // Hent billede API (WordPress mshots)
-                const safeUrl = app.url.startsWith('http') ? app.url : `https://${app.url}`;
-                const screenshotUrl = `https://s0.wordpress.com/mshots/v1/${encodeURIComponent(safeUrl)}?w=600`;
+                
+                // Brug brugerens eget billede eller en standard placeholder
+                const imgSource = app.imageUrl && app.imageUrl.trim() !== '' 
+                    ? app.imageUrl 
+                    : `https://placehold.co/600x400/1e293b/ffffff?text=${encodeURIComponent(app.title)}`;
                 
                 card.className = `group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-slate-200 aspect-[4/3] sm:aspect-[4/3] flex flex-col transition-all duration-300 transform ${isEditMode ? '' : 'cursor-pointer hover:-translate-y-1'}`;
                 
                 // Opbyg HTML strukturen for kortet
                 card.innerHTML = `
-                    <img src="${screenshotUrl}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.src='https://placehold.co/600x400/1e293b/ffffff?text=${encodeURIComponent(app.title)}'">
+                    <img src="${imgSource}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.src='https://placehold.co/600x400/1e293b/ffffff?text=${encodeURIComponent(app.title)}'">
                     
                     <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
                     
@@ -495,7 +484,7 @@
                 `;
 
                 if (!isEditMode) {
-                    card.onclick = () => openPreviewModal(app);
+                    card.onclick = () => window.open(app.url, '_blank');
                 } else {
                     const controls = document.createElement('div');
                     controls.className = 'absolute top-3 right-3 flex gap-2 z-20';
@@ -528,46 +517,6 @@
             }
         }
 
-        // PREVIEW MODAL LOGIC (Iframe)
-        const previewModal = document.getElementById('previewModal');
-        const previewModalContent = document.getElementById('previewModalContent');
-        const previewIframe = document.getElementById('previewIframe');
-        const previewLoader = document.getElementById('previewLoader');
-        let currentAppUrl = '';
-
-        function openPreviewModal(app) {
-            currentAppUrl = app.url.startsWith('http') ? app.url : `https://${app.url}`;
-            
-            document.getElementById('previewTitle').innerText = app.title;
-            document.getElementById('previewIcon').className = app.icon + ' text-slate-300';
-            
-            previewModal.classList.remove('opacity-0', 'pointer-events-none');
-            previewModalContent.classList.remove('scale-95');
-            
-            previewLoader.style.display = 'flex';
-            previewIframe.style.opacity = '0';
-            previewIframe.src = currentAppUrl;
-        }
-
-        previewIframe.onload = () => {
-            if(previewIframe.src && previewIframe.src !== window.location.href) {
-                previewLoader.style.display = 'none';
-                previewIframe.style.opacity = '1';
-            }
-        };
-
-        function closePreview() {
-            previewModal.classList.add('opacity-0', 'pointer-events-none');
-            previewModalContent.classList.add('scale-95');
-            setTimeout(() => { previewIframe.src = ''; }, 300);
-        }
-
-        document.getElementById('closePreviewBtn').addEventListener('click', closePreview);
-        document.getElementById('previewNewTabBtn').addEventListener('click', () => {
-            window.open(currentAppUrl, '_blank');
-            closePreview();
-        });
-
         // APP EDIT/ADD MODAL LOGIC
         const appModal = document.getElementById('appModal');
         const appModalContent = document.getElementById('appModalContent');
@@ -580,6 +529,13 @@
         };
 
         function openAppModal(app = null) {
+            const currentImagePreview = document.getElementById('currentImagePreview');
+            const currentImageImg = document.getElementById('currentImageImg');
+            const existingImageUrl = document.getElementById('existingImageUrl');
+            const appImageFile = document.getElementById('appImageFile');
+            
+            appImageFile.value = ''; // Nulstil fil-input
+
             if (app) {
                 document.getElementById('modalTitle').textContent = 'Rediger App';
                 document.getElementById('appId').value = app.id;
@@ -587,10 +543,21 @@
                 document.getElementById('appUrl').value = app.url;
                 document.getElementById('appIcon').value = app.icon || '';
                 document.getElementById('iconPreview').className = app.icon || 'fas fa-globe';
+                
+                if (app.imageUrl) {
+                    existingImageUrl.value = app.imageUrl;
+                    currentImageImg.src = app.imageUrl;
+                    currentImagePreview.classList.remove('hidden');
+                } else {
+                    existingImageUrl.value = '';
+                    currentImagePreview.classList.add('hidden');
+                }
             } else {
                 document.getElementById('modalTitle').textContent = 'Tilføj Ny App';
                 appFormDom.reset();
                 document.getElementById('appId').value = '';
+                existingImageUrl.value = '';
+                currentImagePreview.classList.add('hidden');
                 document.getElementById('iconPreview').className = 'fas fa-globe text-slate-400 text-lg';
             }
             appModal.classList.remove('opacity-0', 'pointer-events-none');
@@ -605,33 +572,85 @@
         document.getElementById('closeAppModalBtn').addEventListener('click', closeAppModal);
         document.getElementById('cancelAppBtn').addEventListener('click', closeAppModal);
         
+        document.getElementById('removeImageBtn').addEventListener('click', () => {
+            document.getElementById('existingImageUrl').value = '';
+            document.getElementById('currentImagePreview').classList.add('hidden');
+        });
+
         document.getElementById('appIcon').addEventListener('input', (e) => {
             document.getElementById('iconPreview').className = e.target.value || 'fas fa-globe text-slate-400 text-lg';
         });
 
-        appFormDom.addEventListener('submit', (e) => {
+        appFormDom.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const id = document.getElementById('appId').value;
-            const title = document.getElementById('appName').value.trim();
-            const url = document.getElementById('appUrl').value.trim();
-            const icon = document.getElementById('appIcon').value.trim() || 'fas fa-globe';
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerText;
+            submitBtn.innerText = "Gemmer...";
+            submitBtn.disabled = true;
 
-            if (id) {
-                const index = apps.findIndex(a => a.id === id);
-                if (index !== -1) apps[index] = { id, title, url, icon };
-            } else {
-                apps.push({ id: Date.now().toString(), title, url, icon });
+            try {
+                const id = document.getElementById('appId').value;
+                const title = document.getElementById('appName').value.trim();
+                const url = document.getElementById('appUrl').value.trim();
+                const icon = document.getElementById('appIcon').value.trim() || 'fas fa-globe';
+                
+                let imageUrl = document.getElementById('existingImageUrl').value;
+                const fileInput = document.getElementById('appImageFile');
+
+                // Hvis brugeren har valgt et nyt billede, uploades det til Firebase Storage
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const fileRef = ref(storage, `users/${currentUser.uid}/app_images/${Date.now()}_${file.name}`);
+                    const snapshot = await uploadBytes(fileRef, file);
+                    imageUrl = await getDownloadURL(snapshot.ref);
+                }
+
+                if (id) {
+                    const index = apps.findIndex(a => a.id === id);
+                    if (index !== -1) apps[index] = { id, title, url, icon, imageUrl };
+                } else {
+                    apps.push({ id: Date.now().toString(), title, url, icon, imageUrl });
+                }
+
+                await saveAppsToFirestore();
+                closeAppModal();
+            } catch (error) {
+                console.error("Fejl ved gemning:", error);
+                const errorMsgBox = document.createElement('div');
+                errorMsgBox.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg z-[100]';
+                errorMsgBox.innerText = "Fejl under upload. Tjek Firebase Storage regler.";
+                document.body.appendChild(errorMsgBox);
+                setTimeout(() => errorMsgBox.remove(), 4000);
+            } finally {
+                submitBtn.innerText = originalBtnText;
+                submitBtn.disabled = false;
             }
-
-            saveAppsToFirestore();
-            closeAppModal();
         });
 
         window.deleteApp = (id) => {
-            if(confirm("Er du sikker på, at du vil fjerne denne app?")) {
+            const errorMsgBox = document.createElement('div');
+            errorMsgBox.className = 'fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4';
+            errorMsgBox.innerHTML = `
+                <div class="bg-white p-6 rounded-3xl shadow-xl max-w-sm w-full text-center">
+                    <div class="w-14 h-14 rounded-full bg-red-100 text-red-500 mx-auto flex items-center justify-center text-2xl mb-4">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Slet app?</h3>
+                    <p class="text-slate-500 mb-6 text-sm">Er du sikker på, at du vil fjerne denne app fra dit dashboard?</p>
+                    <div class="flex gap-3 justify-center">
+                        <button class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors w-full" onclick="this.parentElement.parentElement.parentElement.remove()">Annuller</button>
+                        <button class="px-5 py-2.5 rounded-xl bg-red-500 text-white font-medium text-sm hover:bg-red-600 transition-colors shadow-sm w-full" id="confirmDeleteBtn_${id}">Slet</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(errorMsgBox);
+            
+            document.getElementById(`confirmDeleteBtn_${id}`).addEventListener('click', () => {
                 apps = apps.filter(app => app.id !== id);
                 saveAppsToFirestore();
-            }
+                errorMsgBox.remove();
+            });
         }
 
         // Toggle Edit Mode
