@@ -1,231 +1,283 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My GitHub Apps Dashboard</title>
+    <!-- VIGTIGT for mobilvisning: -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Dashboard</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
             color: #1e293b;
+            -webkit-tap-highlight-color: transparent;
         }
-        .app-card {
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .app-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-        }
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         /* Loading Spinner */
         .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #1e293b;
+            border: 3px solid #f1f5f9;
+            border-top: 3px solid #3b82f6;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Custom Checkbox Styles */
-        input[type="checkbox"] {
-            accent-color: #1e293b;
-        }
-        [contenteditable]:empty:before {
-            content: attr(placeholder);
-            color: #94a3b8;
-            pointer-events: none;
-            display: block; /* For Firefox */
+        /* Checkbox styling */
+        input[type="checkbox"] { accent-color: #3b82f6; }
+        
+        /* Sidebar transition for mobile */
+        .sidebar-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Glassmorphism utilities */
+        .glass {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
-<body class="h-screen w-full antialiased flex overflow-hidden">
+<body class="h-screen w-full antialiased flex overflow-hidden bg-slate-50">
 
-    <!-- MAIN DASHBOARD CONTENT -->
-    <main class="flex-1 overflow-y-auto flex flex-col items-center py-12 px-6 relative transition-all">
-        
-        <!-- INITIAL LOADING SCREEN -->
-        <div id="loadingScreen" class="absolute inset-0 bg-slate-50 z-50 flex flex-col items-center justify-center transition-opacity duration-300">
-            <div class="loader mb-4"></div>
-            <p class="text-slate-500 font-medium text-sm">Tilslutter til Firebase...</p>
-        </div>
+    <!-- INITIAL LOADING SCREEN -->
+    <div id="loadingScreen" class="absolute inset-0 bg-white z-[100] flex flex-col items-center justify-center transition-opacity duration-300">
+        <div class="loader mb-4"></div>
+        <p class="text-slate-500 font-medium text-sm animate-pulse">Forbinder til skyen...</p>
+    </div>
 
-        <!-- AUTHENTICATION VIEW -->
-        <div id="authView" class="w-full max-w-md hidden flex-col justify-center mt-10">
-            <div class="bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
-                <div class="text-center mb-8">
-                    <div class="w-12 h-12 bg-slate-800 rounded-xl mx-auto flex items-center justify-center mb-4">
-                        <i class="fas fa-lock text-white text-xl"></i>
-                    </div>
-                    <h1 class="text-2xl font-semibold tracking-tight text-slate-800" id="authTitle">Log Ind</h1>
-                    <p class="text-sm text-slate-500 mt-2" id="authSubtitle">Få adgang til dit synkroniserede dashboard</p>
+    <!-- AUTHENTICATION VIEW -->
+    <div id="authView" class="fixed inset-0 w-full h-full bg-slate-50 z-[60] hidden flex-col items-center justify-center p-4">
+        <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-100 w-full max-w-md">
+            <div class="text-center mb-8">
+                <div class="w-14 h-14 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center mb-5 shadow-lg shadow-blue-600/30">
+                    <i class="fas fa-fingerprint text-white text-2xl"></i>
                 </div>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-800" id="authTitle">Velkommen</h1>
+                <p class="text-sm text-slate-500 mt-2" id="authSubtitle">Log ind for at synkronisere dit dashboard</p>
+            </div>
 
-                <form id="authForm" class="space-y-4">
-                    <div id="authErrorMsg" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100 text-center"></div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
-                        <input type="email" id="authEmail" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 outline-none transition-all text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Adgangskode</label>
-                        <input type="password" id="authPassword" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 outline-none transition-all text-sm">
-                    </div>
-                    <button type="submit" id="authSubmitBtn" class="w-full py-3 rounded-xl bg-slate-800 text-white font-medium hover:bg-slate-700 transition-colors shadow-sm mt-2 flex justify-center items-center gap-2">
-                        <span>Log ind</span>
-                    </button>
-                </form>
+            <form id="authForm" class="space-y-4">
+                <div id="authErrorMsg" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100 text-center"></div>
                 
-                <div class="mt-6 text-center">
-                    <button type="button" id="toggleAuthModeBtn" class="text-sm text-slate-500 hover:text-slate-800 transition-colors">
-                        Har du ikke en konto? Opret en her.
-                    </button>
+                <div id="emailInputGroup">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+                    <input type="email" id="authEmail" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
                 </div>
+                <div id="passwordInputGroup">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Adgangskode</label>
+                    <input type="password" id="authPassword" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
+                </div>
+                
+                <button type="submit" id="authSubmitBtn" class="w-full py-3.5 rounded-xl bg-slate-900 text-white font-medium hover:bg-slate-800 transition-colors shadow-md mt-4">
+                    <span>Log ind</span>
+                </button>
+            </form>
+            
+            <div class="mt-6 flex flex-col gap-3">
+                <button type="button" id="toggleAuthModeBtn" class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors mt-2 text-center w-full">
+                    Har du ikke en konto? Opret en.
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- DASHBOARD VIEW -->
-        <div id="dashboardView" class="w-full max-w-5xl hidden flex-col">
+    <!-- MAIN DASHBOARD -->
+    <div id="dashboardView" class="flex-1 flex w-full h-full relative hidden">
+        
+        <!-- Center Content -->
+        <main class="flex-1 overflow-y-auto flex flex-col py-6 px-4 sm:py-10 sm:px-8 relative w-full transition-all">
+            
             <!-- Header -->
-            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-12 gap-4">
+            <header class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
                 <div>
-                    <h1 class="text-3xl font-semibold tracking-tight text-slate-800">My Apps</h1>
-                    <p class="text-sm text-slate-500 mt-1 font-light flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Synkroniseret via Firebase
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Dashboard</h1>
+                    <p class="text-sm text-slate-500 mt-1 flex items-center gap-2">
+                        <span id="syncStatus" class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span> 
+                        <span id="userStatusText">Synkroniseret</span>
                     </p>
                 </div>
                 
-                <div class="flex gap-3 flex-wrap">
-                    <button id="addAppBtnHeader" class="px-5 py-2.5 rounded-xl bg-slate-800 text-white font-medium text-sm hover:bg-slate-700 transition-colors shadow-sm flex items-center gap-2 hidden">
-                        <i class="fas fa-plus text-xs"></i> <span>Add App</span>
+                <div class="flex flex-wrap gap-2 sm:gap-3">
+                    <button id="addAppBtnHeader" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-blue-600 text-white font-medium text-xs sm:text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-600/20 flex items-center gap-2 hidden">
+                        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tilføj App</span>
                     </button>
-                    <button id="toggleEditBtn" class="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2">
-                        <i class="fas fa-pen text-xs"></i> <span>Edit Mode</span>
+                    <button id="toggleEditBtn" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-medium text-xs sm:text-sm hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2">
+                        <i class="fas fa-pen"></i> <span class="hidden sm:inline">Rediger</span>
                     </button>
-                    <button id="logoutBtn" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 font-medium text-sm hover:bg-slate-200 transition-colors shadow-sm flex items-center gap-2" title="Log ud">
+                    <!-- Mobile To-Do Toggle -->
+                    <button id="mobileTodoBtn" class="lg:hidden px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2">
+                        <i class="fas fa-check-square"></i>
+                    </button>
+                    <button id="logoutBtn" class="px-4 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 hover:bg-slate-200 transition-colors flex items-center gap-2" title="Log ud">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
-            </div>
+            </header>
 
             <!-- App Grid -->
-            <div id="appGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div id="appGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 pb-20">
                 <!-- Dynamisk indhold -->
             </div>
-        </div>
-    </main>
+        </main>
 
-    <!-- RESIZER -->
-    <div id="sidebarResizer" class="w-1 bg-slate-200 hover:bg-slate-400 cursor-col-resize transition-colors z-40 relative"></div>
+        <!-- Resizer (Desktop only) -->
+        <div id="sidebarResizer" class="hidden lg:block w-1 bg-transparent hover:bg-blue-400 cursor-col-resize transition-colors z-40 relative"></div>
 
-    <!-- SIDEBAR (TO-DO LIST) -->
-    <aside id="todoSidebar" class="bg-white flex flex-col h-full z-30 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] border-l border-slate-100" style="width: 320px; min-width: 240px; max-width: 50%;">
-        <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                <i class="fas fa-check-square text-slate-400"></i> To-Do
-            </h2>
-        </div>
-        <div class="flex-1 overflow-y-auto p-4">
-            <div id="todoList" class="space-y-1 mb-2">
-                <!-- To-Do Items Indlæses Her -->
+        <!-- Mobile Overlay -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 lg:hidden opacity-0 pointer-events-none transition-opacity duration-300"></div>
+
+        <!-- TO-DO SIDEBAR -->
+        <aside id="todoSidebar" class="fixed lg:relative top-0 right-0 h-full w-4/5 max-w-sm lg:w-[320px] bg-white z-50 lg:z-30 shadow-2xl lg:shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.03)] border-l border-slate-100 flex flex-col sidebar-transition translate-x-full lg:translate-x-0">
+            <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-check-circle text-blue-500"></i> Opgaver
+                </h2>
+                <button id="closeSidebarBtn" class="lg:hidden w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:text-slate-800">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 flex flex-col">
+                <div id="todoList" class="space-y-1.5 flex-1">
+                    <!-- To-Do Items -->
+                </div>
+                
+                <div class="mt-4 pt-3 border-t border-slate-100">
+                    <div class="flex items-center bg-slate-50 rounded-xl px-3 py-2 border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+                        <i class="fas fa-plus text-slate-400 text-xs mr-2"></i>
+                        <input type="text" id="newTaskInput" class="bg-transparent outline-none text-sm text-slate-700 w-full placeholder-slate-400 py-1" placeholder="Ny opgave...">
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- PREVIEW IFRAME MODAL -->
+    <div id="previewModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center z-[70] p-2 sm:p-6">
+        <div class="bg-white w-full h-full sm:h-[90vh] sm:max-w-6xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden transform scale-95 transition-transform duration-300" id="previewModalContent">
+            
+            <!-- Modal Header -->
+            <div class="h-14 bg-slate-900 text-white flex justify-between items-center px-4 shrink-0">
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <i id="previewIcon" class="fas fa-globe text-slate-300"></i>
+                    <h3 id="previewTitle" class="font-medium text-sm truncate">Preview</h3>
+                </div>
+                <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+                    <button id="previewNewTabBtn" class="px-3 py-1.5 hover:bg-slate-800 rounded-lg transition-colors text-xs flex items-center gap-2 border border-slate-700">
+                        <i class="fas fa-external-link-alt"></i> <span class="hidden sm:inline">Åbn rigtigt</span>
+                    </button>
+                    <button id="closePreviewBtn" class="w-8 h-8 flex items-center justify-center hover:bg-slate-800 rounded-lg transition-colors text-lg ml-1">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             </div>
             
-            <div class="mt-2 flex items-start group cursor-text px-2 py-1.5 rounded hover:bg-slate-50 transition-colors" onclick="document.getElementById('newTaskInput').focus()">
-                <i class="fas fa-plus text-slate-400 text-[10px] mt-1.5 mr-3 group-hover:text-slate-600"></i>
-                <input type="text" id="newTaskInput" class="bg-transparent outline-none text-sm text-slate-700 w-full placeholder-slate-400" placeholder="Tilføj en opgave...">
+            <!-- Modal Body (Iframe) -->
+            <div class="flex-1 bg-slate-100 relative w-full h-full">
+                <!-- Loader inside preview -->
+                <div id="previewLoader" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 z-20">
+                    <div class="loader mb-3"></div>
+                    <span class="text-sm text-slate-500 font-medium">Henter hjemmeside...</span>
+                    <span class="text-xs text-slate-400 mt-2 max-w-xs text-center px-4">Hvis siden forbliver hvid, tillader den ikke indlejring. Brug "Åbn rigtigt" knappen øverst.</span>
+                </div>
+                <!-- Iframe -->
+                <iframe id="previewIframe" class="w-full h-full relative z-10 border-none bg-white" src="" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
             </div>
         </div>
-    </aside>
+    </div>
 
     <!-- ADD/EDIT APP MODAL -->
-    <div id="appModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300" id="modalContent">
+    <div id="appModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center z-[80] p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300" id="appModalContent">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h3 class="text-lg font-semibold text-slate-800" id="modalTitle">Add New App</h3>
-                <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
+                <h3 class="text-lg font-bold text-slate-800" id="modalTitle">Tilføj App</h3>
+                <button id="closeAppModalBtn" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             
-            <form id="appForm" class="p-6">
+            <form id="appForm" class="p-6 space-y-4">
                 <input type="hidden" id="appId">
-                <div class="mb-5">
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">App Title</label>
-                    <input type="text" id="appName" required placeholder="e.g., Budget Tracker" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 outline-none transition-all text-sm">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">App Titel</label>
+                    <input type="text" id="appName" required placeholder="f.eks. DR Nyheder" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
                 </div>
-                <div class="mb-5">
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">URL</label>
-                    <input type="text" id="appUrl" required placeholder="/my-app-folder/ eller https://..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 outline-none transition-all text-sm">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Webadresse (URL)</label>
+                    <input type="url" id="appUrl" required placeholder="https://www.dr.dk" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
                 </div>
-                <div class="mb-6">
+                <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1.5 flex justify-between">
-                        <span>FontAwesome Icon Class</span>
-                        <a href="https://fontawesome.com/search?o=r&m=free" target="_blank" class="text-slate-400 hover:text-slate-800 text-xs flex items-center gap-1">
-                            Find ikoner <i class="fas fa-external-link-alt text-[10px]"></i>
-                        </a>
+                        <span>Ikon (FontAwesome klasse)</span>
                     </label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i id="iconPreview" class="fas fa-box text-slate-400"></i>
+                            <i id="iconPreview" class="fas fa-globe text-slate-400 text-lg"></i>
                         </div>
-                        <input type="text" id="appIcon" required placeholder="fas fa-calculator" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 outline-none transition-all text-sm">
+                        <input type="text" id="appIcon" placeholder="fas fa-newspaper" class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
                     </div>
+                    <p class="text-[11px] text-slate-400 mt-1">Gå til fontawesome.com for at finde ikoner (f.eks. 'fas fa-car').</p>
                 </div>
-                <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" id="cancelBtn" class="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-50 transition-colors">Cancel</button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-slate-800 text-white font-medium text-sm hover:bg-slate-700 transition-colors shadow-sm">Save App</button>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" id="cancelAppBtn" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">Annuller</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 transition-colors shadow-sm">Gem App</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- TO-DO & RESIZER SCRIPT -->
     <script>
-        // --- RESIZER LOGIC ---
+        // --- UI & INTERACTIONS SCRIPT ---
+        
+        // Mobile Sidebar Toggle
+        const mobileTodoBtn = document.getElementById('mobileTodoBtn');
+        const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+        const todoSidebar = document.getElementById('todoSidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function toggleMobileSidebar() {
+            const isClosed = todoSidebar.classList.contains('translate-x-full');
+            if (isClosed) {
+                todoSidebar.classList.remove('translate-x-full');
+                sidebarOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                todoSidebar.classList.add('translate-x-full');
+                sidebarOverlay.classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        mobileTodoBtn.addEventListener('click', toggleMobileSidebar);
+        closeSidebarBtn.addEventListener('click', toggleMobileSidebar);
+        sidebarOverlay.addEventListener('click', toggleMobileSidebar);
+
+        // Desktop Resizer
         const resizer = document.getElementById('sidebarResizer');
-        const sidebar = document.getElementById('todoSidebar');
         let isResizing = false;
 
-        resizer.addEventListener('mousedown', (e) => {
+        resizer.addEventListener('mousedown', () => {
             isResizing = true;
             document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none'; // Prevent text selection while dragging
+            document.body.style.userSelect = 'none';
         });
 
         document.addEventListener('mousemove', (e) => {
-            if (!isResizing) return;
-            // Calculate width from the right edge
-            let newWidth = document.body.clientWidth - e.clientX;
-            
-            // Constrain width min: 240px, max: 50% of window
-            if (newWidth < 240) newWidth = 240;
-            if (newWidth > document.body.clientWidth / 2) newWidth = document.body.clientWidth / 2;
-            
-            sidebar.style.width = `${newWidth}px`;
+            if (!isResizing || window.innerWidth < 1024) return; // Only on desktop
+            let newWidth = window.innerWidth - e.clientX;
+            if (newWidth < 280) newWidth = 280;
+            if (newWidth > window.innerWidth / 2) newWidth = window.innerWidth / 2;
+            todoSidebar.style.width = `${newWidth}px`;
         });
 
         document.addEventListener('mouseup', () => {
@@ -236,60 +288,42 @@
             }
         });
 
-        // --- TO-DO LOGIC ---
+        // To-Do Logic (Gemmes lokalt, da de var gemt via localStorage i originalen)
         const todoList = document.getElementById('todoList');
         const newTaskInput = document.getElementById('newTaskInput');
-        let todos = JSON.parse(localStorage.getItem('notionTodos')) || [];
+        let todos = JSON.parse(localStorage.getItem('dashboardTodos')) || [
+            { text: "Velkommen til dit nye dashboard!", completed: false },
+            { text: "Prøv at tilføje en ny app", completed: false }
+        ];
 
         function renderTodos() {
             todoList.innerHTML = '';
             todos.forEach((todo, index) => {
-                const todoDiv = document.createElement('div');
-                todoDiv.className = 'group flex items-start px-2 py-1.5 hover:bg-slate-50 rounded transition-colors relative';
-                
-                todoDiv.innerHTML = `
+                const div = document.createElement('div');
+                div.className = 'group flex items-start p-2.5 bg-white border border-slate-100 hover:border-slate-200 hover:shadow-sm rounded-xl transition-all relative';
+                div.innerHTML = `
                     <div class="pt-0.5">
                         <input type="checkbox" ${todo.completed ? 'checked' : ''} 
-                            class="w-4 h-4 rounded border-slate-300 cursor-pointer mr-3" 
+                            class="w-4 h-4 rounded border-slate-300 cursor-pointer mr-3 mt-0.5" 
                             onchange="toggleTodo(${index})">
                     </div>
                     <span class="flex-1 text-sm outline-none min-h-[20px] ${todo.completed ? 'line-through text-slate-400' : 'text-slate-700'}" 
                           contenteditable="true" 
                           onblur="updateTodo(${index}, this.innerText)"
                           onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }">${todo.text}</span>
-                    <button class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-opacity p-1 ml-2" 
+                    <button class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition-opacity p-1 ml-2" 
                             onclick="deleteTodo(${index})">
-                        <i class="fas fa-times text-xs"></i>
+                        <i class="fas fa-trash-alt text-xs"></i>
                     </button>
                 `;
-                todoList.appendChild(todoDiv);
+                todoList.appendChild(div);
             });
         }
 
-        window.toggleTodo = (index) => {
-            todos[index].completed = !todos[index].completed;
-            saveTodos();
-            renderTodos();
-        };
-
-        window.updateTodo = (index, newText) => {
-            if (newText.trim() === '') {
-                deleteTodo(index);
-            } else {
-                todos[index].text = newText;
-                saveTodos();
-            }
-        };
-
-        window.deleteTodo = (index) => {
-            todos.splice(index, 1);
-            saveTodos();
-            renderTodos();
-        };
-
-        function saveTodos() {
-            localStorage.setItem('notionTodos', JSON.stringify(todos));
-        }
+        window.toggleTodo = (index) => { todos[index].completed = !todos[index].completed; saveTodos(); renderTodos(); };
+        window.updateTodo = (index, text) => { if (text.trim()==='') deleteTodo(index); else { todos[index].text = text; saveTodos(); } };
+        window.deleteTodo = (index) => { todos.splice(index, 1); saveTodos(); renderTodos(); };
+        function saveTodos() { localStorage.setItem('dashboardTodos', JSON.stringify(todos)); }
 
         newTaskInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.target.value.trim() !== '') {
@@ -299,30 +333,15 @@
                 renderTodos();
             }
         });
-
-        // Initialize To-Dos
         renderTodos();
     </script>
 
-    <!-- FIREBASE MODULE SCRIPT -->
     <script type="module">
-        // Import Firebase v10 Modular SDKs
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { 
-            getAuth, 
-            onAuthStateChanged, 
-            signInWithEmailAndPassword, 
-            createUserWithEmailAndPassword, 
-            signOut 
-        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            setDoc, 
-            onSnapshot 
-        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        // Importer Firebase 11.6.1 (Nyeste som understøttes bedst af systemet)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Opdateret Firebase konfiguration (tempco2fugt)
         const firebaseConfig = {
             apiKey: "AIzaSyCqEJ5yRtTB1KjAG0RmnEsDNiXFJBKwUxo",
             authDomain: "tempco2fugt.firebaseapp.com",
@@ -330,209 +349,164 @@
             projectId: "tempco2fugt",
             storageBucket: "tempco2fugt.firebasestorage.app",
             messagingSenderId: "1068932962336",
-            appId: "1:1068932962336:web:36d844285dfa652d5a4445",
-            measurementId: "G-KH00FE680X"
+            appId: "1:1068932962336:web:36d844285dfa652d5a4445"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // State Variables
+        // State
         let apps = [];
         let isEditMode = false;
         let currentUser = null;
         let firestoreUnsubscribe = null;
-        let isLoginMode = true; // true = login, false = register
+        let isLoginMode = true;
 
-        // Standard apps hvis databasen er tom
         const defaultApps = [
-            { id: '1', title: 'Calculator', url: '#', icon: 'fas fa-calculator' },
-            { id: '2', title: 'Weather', url: '#', icon: 'fas fa-cloud-sun' },
-            { id: '3', title: 'Tasks', url: '#', icon: 'fas fa-check-square' }
+            { id: '1', title: 'Danmarks Radio', url: 'https://dr.dk', icon: 'fas fa-newspaper' },
+            { id: '2', title: 'Google', url: 'https://google.com', icon: 'fab fa-google' },
+            { id: '3', title: 'GitHub', url: 'https://github.com', icon: 'fab fa-github' }
         ];
 
-        // --- DOM Elements ---
-        const loadingScreen = document.getElementById('loadingScreen');
+        // DOM
         const authView = document.getElementById('authView');
         const dashboardView = document.getElementById('dashboardView');
-        
-        // Auth UI
-        const authForm = document.getElementById('authForm');
-        const authTitle = document.getElementById('authTitle');
-        const authSubtitle = document.getElementById('authSubtitle');
-        const authSubmitBtn = document.getElementById('authSubmitBtn');
-        const toggleAuthModeBtn = document.getElementById('toggleAuthModeBtn');
-        const authErrorMsg = document.getElementById('authErrorMsg');
-        const logoutBtn = document.getElementById('logoutBtn');
-
-        // Dashboard UI
+        const loadingScreen = document.getElementById('loadingScreen');
         const appGrid = document.getElementById('appGrid');
-        const toggleEditBtn = document.getElementById('toggleEditBtn');
-        const addAppBtnHeader = document.getElementById('addAppBtnHeader');
         
-        // Modal UI
-        const modal = document.getElementById('appModal');
-        const modalContent = document.getElementById('modalContent');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
-        const appFormDom = document.getElementById('appForm');
-
-
-        // --- AUTHENTICATION LOGIC ---
-        
-        // Lyt efter ændringer i login-status (husk mig-funktionalitet)
+        // Auth Listeners
         onAuthStateChanged(auth, (user) => {
             loadingScreen.classList.add('opacity-0', 'pointer-events-none');
             setTimeout(() => loadingScreen.style.display = 'none', 300);
 
             if (user) {
-                // Bruger er logget ind
                 currentUser = user;
                 authView.classList.add('hidden');
+                authView.classList.remove('flex');
                 dashboardView.classList.remove('hidden');
-                dashboardView.classList.add('flex');
                 
-                // Start live-synkronisering af apps
+                document.getElementById('userStatusText').innerText = "Synkroniseret i skyen";
+                document.getElementById('syncStatus').className = "w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]";
+                
                 startSync(user.uid);
             } else {
-                // Ingen bruger
                 currentUser = null;
                 authView.classList.remove('hidden');
                 authView.classList.add('flex');
                 dashboardView.classList.add('hidden');
-                dashboardView.classList.remove('flex');
-                
                 if (firestoreUnsubscribe) firestoreUnsubscribe();
             }
         });
 
-        // Håndter Login / Opret bruger form
-        authForm.addEventListener('submit', async (e) => {
+        // Form Submission
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            authErrorMsg.classList.add('hidden');
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
+            const btnSpan = document.querySelector('#authSubmitBtn span');
             
-            const btnSpan = authSubmitBtn.querySelector('span');
-            const originalText = btnSpan.innerText;
+            if(!email || !password) return;
+
             btnSpan.innerText = "Vent venligst...";
-            authSubmitBtn.disabled = true;
-
             try {
-                if (isLoginMode) {
-                    await signInWithEmailAndPassword(auth, email, password);
-                } else {
-                    await createUserWithEmailAndPassword(auth, email, password);
-                }
-                // onAuthStateChanged håndterer UI skiftet
+                if (isLoginMode) await signInWithEmailAndPassword(auth, email, password);
+                else await createUserWithEmailAndPassword(auth, email, password);
             } catch (error) {
-                let msg = "Der opstod en fejl.";
-                if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') msg = "Forkert email eller adgangskode.";
-                if (error.code === 'auth/email-already-in-use') msg = "Email er allerede i brug.";
-                if (error.code === 'auth/weak-password') msg = "Adgangskoden skal være på mindst 6 tegn.";
-                
-                authErrorMsg.innerText = msg;
-                authErrorMsg.classList.remove('hidden');
+                document.getElementById('authErrorMsg').innerText = "Fejl: Tjek dine oplysninger.";
+                document.getElementById('authErrorMsg').classList.remove('hidden');
             } finally {
-                btnSpan.innerText = originalText;
-                authSubmitBtn.disabled = false;
+                btnSpan.innerText = isLoginMode ? "Log ind" : "Opret bruger";
             }
         });
 
-        // Skift mellem Login og Opret Konto UI
-        toggleAuthModeBtn.addEventListener('click', () => {
+        // Toggle Auth Mode
+        document.getElementById('toggleAuthModeBtn').addEventListener('click', () => {
             isLoginMode = !isLoginMode;
-            authErrorMsg.classList.add('hidden');
-            if (isLoginMode) {
-                authTitle.innerText = "Log Ind";
-                authSubtitle.innerText = "Få adgang til dit synkroniserede dashboard";
-                authSubmitBtn.querySelector('span').innerText = "Log ind";
-                toggleAuthModeBtn.innerText = "Har du ikke en konto? Opret en her.";
-            } else {
-                authTitle.innerText = "Opret Konto";
-                authSubtitle.innerText = "Opret dit personlige dashboard";
-                authSubmitBtn.querySelector('span').innerText = "Opret bruger";
-                toggleAuthModeBtn.innerText = "Har du allerede en konto? Log ind.";
-            }
+            document.getElementById('authTitle').innerText = isLoginMode ? "Velkommen" : "Opret Konto";
+            document.querySelector('#authSubmitBtn span').innerText = isLoginMode ? "Log ind" : "Opret bruger";
+            document.getElementById('toggleAuthModeBtn').innerText = isLoginMode ? "Har du ikke en konto? Opret en." : "Har du allerede en konto? Log ind.";
         });
 
-        // Log Ud
-        logoutBtn.addEventListener('click', () => {
-            signOut(auth);
-        });
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
 
-
-        // --- FIRESTORE SYNC LOGIC ---
-
+        // Firestore Sync
         function startSync(uid) {
             const userDocRef = doc(db, 'users', uid);
-            
-            // onSnapshot lytter live! Ændres databasen fra en anden enhed, opdateres UI'et her øjeblikkeligt.
             firestoreUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     apps = docSnap.data().apps || [];
                 } else {
-                    // Første gang brugeren logger ind, opretter vi dokumentet med standard apps
                     apps = [...defaultApps];
-                    saveAppsToFirestore(); 
+                    saveAppsToFirestore();
                 }
                 renderApps();
             }, (error) => {
-                console.error("Fejl ved synkronisering:", error);
+                console.error("Kunne ikke lytte til database.", error);
                 alert("Kunne ikke synkronisere data. Tjek dine Firestore sikkerhedsregler.");
             });
         }
 
         async function saveAppsToFirestore() {
             if (!currentUser) return;
-            const userDocRef = doc(db, 'users', currentUser.uid);
             try {
-                // Skubber det opdaterede array op i skyen. onSnapshot sørger derefter for at gen-rendre UI'et
-                await setDoc(userDocRef, { apps: apps }, { merge: true });
+                await setDoc(doc(db, 'users', currentUser.uid), { apps }, { merge: true });
             } catch (error) {
-                console.error("Fejl ved gem:", error);
+                console.error(error);
             }
         }
 
+        // --- RENDER & PREVIEW LOGIC ---
 
-        // --- DASHBOARD UI LOGIC ---
+        function getFavicon(url) {
+            try {
+                const domain = new URL(url).hostname;
+                return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+            } catch {
+                return null;
+            }
+        }
 
         function renderApps() {
             appGrid.innerHTML = '';
             
             apps.forEach(app => {
                 const card = document.createElement('div');
-                card.className = `app-card relative bg-white rounded-2xl border border-slate-100 flex flex-col items-center justify-center p-6 text-center ${isEditMode ? 'cursor-default' : 'cursor-pointer'}`;
+                // Hent billede API (WordPress mshots)
+                const safeUrl = app.url.startsWith('http') ? app.url : `https://${app.url}`;
+                const screenshotUrl = `https://s0.wordpress.com/mshots/v1/${encodeURIComponent(safeUrl)}?w=600`;
                 
-                if (!isEditMode) {
-                    card.onclick = () => window.open(app.url, '_blank');
-                }
-
+                card.className = `group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-slate-200 aspect-[4/3] sm:aspect-[4/3] flex flex-col transition-all duration-300 transform ${isEditMode ? '' : 'cursor-pointer hover:-translate-y-1'}`;
+                
+                // Opbyg HTML strukturen for kortet
                 card.innerHTML = `
-                    <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 text-slate-600 text-2xl group-hover:scale-110 transition-transform duration-300">
-                        <i class="${app.icon}"></i>
+                    <img src="${screenshotUrl}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onerror="this.src='https://placehold.co/600x400/1e293b/ffffff?text=${encodeURIComponent(app.title)}'">
+                    
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                    
+                    <div class="absolute inset-0 p-4 sm:p-5 flex flex-col justify-end z-10 text-white">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl glass flex items-center justify-center mb-3 sm:mb-4 text-lg sm:text-xl shadow-lg">
+                            <i class="${app.icon || 'fas fa-globe'} text-white"></i>
+                        </div>
+                        <h3 class="font-bold text-base sm:text-lg leading-tight mb-1 truncate">${app.title}</h3>
+                        <p class="text-xs text-slate-300 truncate opacity-80">${app.url}</p>
                     </div>
-                    <h3 class="text-sm font-medium text-slate-800">${app.title}</h3>
                 `;
 
-                if (isEditMode) {
+                if (!isEditMode) {
+                    card.onclick = () => openPreviewModal(app);
+                } else {
                     const controls = document.createElement('div');
-                    controls.className = 'absolute top-3 right-3 flex gap-2';
-                    
-                    const editBtn = document.createElement('button');
-                    editBtn.className = 'w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center transition-colors';
-                    editBtn.innerHTML = '<i class="fas fa-pen text-[10px]"></i>';
-                    editBtn.onclick = (e) => { e.stopPropagation(); openModal(app); };
-                    
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition-colors';
-                    deleteBtn.innerHTML = '<i class="fas fa-trash text-[10px]"></i>';
-                    deleteBtn.onclick = (e) => { e.stopPropagation(); deleteApp(app.id); };
-
-                    controls.appendChild(editBtn);
-                    controls.appendChild(deleteBtn);
+                    controls.className = 'absolute top-3 right-3 flex gap-2 z-20';
+                    controls.innerHTML = `
+                        <button class="w-8 h-8 rounded-full bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center shadow-lg transition-colors" onclick="event.stopPropagation(); window.openEditModal('${app.id}')">
+                            <i class="fas fa-pen text-xs"></i>
+                        </button>
+                        <button class="w-8 h-8 rounded-full bg-red-500 text-white hover:bg-red-600 flex items-center justify-center shadow-lg transition-colors" onclick="event.stopPropagation(); window.deleteApp('${app.id}')">
+                            <i class="fas fa-trash text-xs"></i>
+                        </button>
+                    `;
                     card.appendChild(controls);
                     card.classList.add('opacity-90');
                 }
@@ -542,83 +516,105 @@
 
             if (isEditMode) {
                 const addCard = document.createElement('div');
-                addCard.className = 'app-card relative rounded-2xl border-2 border-dashed border-slate-200 bg-transparent hover:border-slate-300 hover:bg-slate-50 flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-colors';
-                addCard.onclick = () => openModal();
+                addCard.className = 'relative rounded-2xl border-2 border-dashed border-slate-300 bg-transparent hover:border-blue-400 hover:bg-blue-50/50 aspect-[4/3] flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-colors';
+                addCard.onclick = () => openAppModal();
                 addCard.innerHTML = `
-                    <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 text-slate-500">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3 text-blue-600 shadow-sm">
                         <i class="fas fa-plus"></i>
                     </div>
-                    <h3 class="text-sm font-medium text-slate-600">Add App</h3>
+                    <h3 class="text-sm font-semibold text-slate-700">Tilføj ny app</h3>
                 `;
                 appGrid.appendChild(addCard);
             }
         }
 
-        // Edit Mode Toggle
-        toggleEditBtn.addEventListener('click', () => {
-            isEditMode = !isEditMode;
-            if (isEditMode) {
-                toggleEditBtn.classList.add('bg-slate-800', 'text-white');
-                toggleEditBtn.classList.remove('bg-white', 'text-slate-600');
-                toggleEditBtn.innerHTML = '<i class="fas fa-check text-xs"></i> <span>Done Editing</span>';
-                addAppBtnHeader.classList.remove('hidden');
-            } else {
-                toggleEditBtn.classList.remove('bg-slate-800', 'text-white');
-                toggleEditBtn.classList.add('bg-white', 'text-slate-600');
-                toggleEditBtn.innerHTML = '<i class="fas fa-pen text-xs"></i> <span>Edit Mode</span>';
-                addAppBtnHeader.classList.add('hidden');
+        // PREVIEW MODAL LOGIC (Iframe)
+        const previewModal = document.getElementById('previewModal');
+        const previewModalContent = document.getElementById('previewModalContent');
+        const previewIframe = document.getElementById('previewIframe');
+        const previewLoader = document.getElementById('previewLoader');
+        let currentAppUrl = '';
+
+        function openPreviewModal(app) {
+            currentAppUrl = app.url.startsWith('http') ? app.url : `https://${app.url}`;
+            
+            document.getElementById('previewTitle').innerText = app.title;
+            document.getElementById('previewIcon').className = app.icon + ' text-slate-300';
+            
+            previewModal.classList.remove('opacity-0', 'pointer-events-none');
+            previewModalContent.classList.remove('scale-95');
+            
+            previewLoader.style.display = 'flex';
+            previewIframe.style.opacity = '0';
+            previewIframe.src = currentAppUrl;
+        }
+
+        previewIframe.onload = () => {
+            if(previewIframe.src && previewIframe.src !== window.location.href) {
+                previewLoader.style.display = 'none';
+                previewIframe.style.opacity = '1';
             }
-            renderApps();
+        };
+
+        function closePreview() {
+            previewModal.classList.add('opacity-0', 'pointer-events-none');
+            previewModalContent.classList.add('scale-95');
+            setTimeout(() => { previewIframe.src = ''; }, 300);
+        }
+
+        document.getElementById('closePreviewBtn').addEventListener('click', closePreview);
+        document.getElementById('previewNewTabBtn').addEventListener('click', () => {
+            window.open(currentAppUrl, '_blank');
+            closePreview();
         });
 
-        addAppBtnHeader.addEventListener('click', () => openModal());
-        closeModalBtn.addEventListener('click', closeModal);
-        cancelBtn.addEventListener('click', closeModal);
-        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        // APP EDIT/ADD MODAL LOGIC
+        const appModal = document.getElementById('appModal');
+        const appModalContent = document.getElementById('appModalContent');
+        const appFormDom = document.getElementById('appForm');
+        
+        window.openAppModal = openAppModal;
+        window.openEditModal = (id) => {
+            const app = apps.find(a => a.id === id);
+            if(app) openAppModal(app);
+        };
 
-        const appIdInput = document.getElementById('appId');
-        const appNameInput = document.getElementById('appName');
-        const appUrlInput = document.getElementById('appUrl');
-        const appIconInput = document.getElementById('appIcon');
-        const iconPreview = document.getElementById('iconPreview');
-
-        appIconInput.addEventListener('input', (e) => {
-            const iconClass = e.target.value.trim();
-            iconPreview.className = iconClass ? iconClass : 'fas fa-box text-slate-300';
-        });
-
-        function openModal(app = null) {
+        function openAppModal(app = null) {
             if (app) {
-                document.getElementById('modalTitle').textContent = 'Edit App';
-                appIdInput.value = app.id;
-                appNameInput.value = app.title;
-                appUrlInput.value = app.url;
-                appIconInput.value = app.icon;
-                iconPreview.className = app.icon;
+                document.getElementById('modalTitle').textContent = 'Rediger App';
+                document.getElementById('appId').value = app.id;
+                document.getElementById('appName').value = app.title;
+                document.getElementById('appUrl').value = app.url;
+                document.getElementById('appIcon').value = app.icon || '';
+                document.getElementById('iconPreview').className = app.icon || 'fas fa-globe';
             } else {
-                document.getElementById('modalTitle').textContent = 'Add New App';
+                document.getElementById('modalTitle').textContent = 'Tilføj Ny App';
                 appFormDom.reset();
-                appIdInput.value = '';
-                iconPreview.className = 'fas fa-box text-slate-300';
+                document.getElementById('appId').value = '';
+                document.getElementById('iconPreview').className = 'fas fa-globe text-slate-400 text-lg';
             }
-            modal.classList.remove('opacity-0', 'pointer-events-none');
-            modalContent.classList.remove('scale-95');
-            modalContent.classList.add('scale-100');
-            setTimeout(() => appNameInput.focus(), 100);
+            appModal.classList.remove('opacity-0', 'pointer-events-none');
+            appModalContent.classList.remove('scale-95');
         }
 
-        function closeModal() {
-            modal.classList.add('opacity-0', 'pointer-events-none');
-            modalContent.classList.remove('scale-100');
-            modalContent.classList.add('scale-95');
+        function closeAppModal() {
+            appModal.classList.add('opacity-0', 'pointer-events-none');
+            appModalContent.classList.add('scale-95');
         }
+
+        document.getElementById('closeAppModalBtn').addEventListener('click', closeAppModal);
+        document.getElementById('cancelAppBtn').addEventListener('click', closeAppModal);
+        
+        document.getElementById('appIcon').addEventListener('input', (e) => {
+            document.getElementById('iconPreview').className = e.target.value || 'fas fa-globe text-slate-400 text-lg';
+        });
 
         appFormDom.addEventListener('submit', (e) => {
             e.preventDefault();
-            const id = appIdInput.value;
-            const title = appNameInput.value.trim();
-            const url = appUrlInput.value.trim();
-            const icon = appIconInput.value.trim() || 'fas fa-link';
+            const id = document.getElementById('appId').value;
+            const title = document.getElementById('appName').value.trim();
+            const url = document.getElementById('appUrl').value.trim();
+            const icon = document.getElementById('appIcon').value.trim() || 'fas fa-globe';
 
             if (id) {
                 const index = apps.findIndex(a => a.id === id);
@@ -627,36 +623,39 @@
                 apps.push({ id: Date.now().toString(), title, url, icon });
             }
 
-            saveAppsToFirestore(); // Gemmer til database og lader onSnapshot gen-tegne UI'et
-            closeModal();
+            saveAppsToFirestore();
+            closeAppModal();
         });
 
-        function deleteApp(id) {
-            const confirmBox = document.createElement('div');
-            confirmBox.className = 'fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4';
-            confirmBox.innerHTML = `
-                <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center transform scale-100">
-                    <div class="w-12 h-12 rounded-full bg-red-100 text-red-500 mx-auto flex items-center justify-center text-xl mb-4">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <h3 class="text-lg font-semibold text-slate-800 mb-2">Delete App?</h3>
-                    <p class="text-slate-500 text-sm mb-6">Er du sikker på, du vil fjerne denne app?</p>
-                    <div class="flex gap-3 justify-center">
-                        <button id="cancelDelBtn" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors flex-1">Annuller</button>
-                        <button id="confirmDelBtn" class="px-4 py-2 rounded-xl bg-red-500 text-white font-medium text-sm hover:bg-red-600 transition-colors shadow-sm flex-1">Slet</button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(confirmBox);
-            
-            document.getElementById('cancelDelBtn').onclick = () => confirmBox.remove();
-            document.getElementById('confirmDelBtn').onclick = () => {
+        window.deleteApp = (id) => {
+            if(confirm("Er du sikker på, at du vil fjerne denne app?")) {
                 apps = apps.filter(app => app.id !== id);
                 saveAppsToFirestore();
-                confirmBox.remove();
-            };
+            }
         }
+
+        // Toggle Edit Mode
+        const toggleEditBtn = document.getElementById('toggleEditBtn');
+        const addAppBtnHeader = document.getElementById('addAppBtnHeader');
+        
+        toggleEditBtn.addEventListener('click', () => {
+            isEditMode = !isEditMode;
+            if (isEditMode) {
+                toggleEditBtn.classList.replace('bg-white', 'bg-blue-100');
+                toggleEditBtn.classList.replace('text-slate-700', 'text-blue-700');
+                toggleEditBtn.innerHTML = '<i class="fas fa-check"></i> <span class="hidden sm:inline">Færdig</span>';
+                addAppBtnHeader.classList.remove('hidden');
+            } else {
+                toggleEditBtn.classList.replace('bg-blue-100', 'bg-white');
+                toggleEditBtn.classList.replace('text-blue-700', 'text-slate-700');
+                toggleEditBtn.innerHTML = '<i class="fas fa-pen"></i> <span class="hidden sm:inline">Rediger</span>';
+                addAppBtnHeader.classList.add('hidden');
+            }
+            renderApps();
+        });
+        
+        addAppBtnHeader.addEventListener('click', () => openAppModal());
+
     </script>
 </body>
 </html>
