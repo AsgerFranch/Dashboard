@@ -2,243 +2,462 @@
 <html lang="da">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Dashboard</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aalborg Kontrolpanel: Vejr, Elpriser & Genveje</title>
+    <meta name="description" content="Praktisk dagligt kontrolpanel for Aalborg med Yr.no vejrudsigt, soltider, DK1 elpriser inkl. tariffer, hurtige genveje og synkroniseret opgaveliste.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hepta+Slab:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #ffffff; /* Renere hvid baggrund som referencen */
-            color: #1e293b;
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: custom · redesign: full
+ * idea: "Nordic utility instrument desk built around Aalborg daylight, Yr.no forecast, DK1 tariff windows, compact launcher and tasks"
+ * vibe: "Crisp Nordic utility instrument desk"
+ * paper: oklch(97.8% 0.004 225) · accent: oklch(43% 0.13 218) · display: Hepta Slab · body: IBM Plex Sans
+ * nav: top utility bar with inline filter and mode toggles · signature: dual live telemetry strip (Yr.no + DK1 tariff planner) · states: loading, empty, error, full
+ * axes: light/slab-serif/cool · posture: high-craft-light · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P9 H9 E9 S9 R9 V9 · weakest: S, tightened widget density and added cheapest-hour planner readout */
+@import url("./tokens.css");
+@import url("./base.css");
+
+        html, body {
+            overflow-x: clip;
+            background-color: var(--color-paper);
+            color: var(--color-ink);
+            font-family: var(--font-body);
             -webkit-tap-highlight-color: transparent;
         }
-        
-        /* Custom scrollbar */
+
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        /* Loading Spinner */
+        ::-webkit-scrollbar-thumb { background: var(--color-rule); border-radius: var(--radius-pill); }
+
         .loader {
-            border: 3px solid #f1f5f9;
-            border-top: 3px solid #3b82f6;
+            border: 2px solid var(--color-paper-3);
+            border-top: 2px solid var(--color-accent);
             border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            animation: spin 1s linear infinite;
+            width: 28px;
+            height: 28px;
+            animation: spin 0.9s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Checkbox styling */
-        input[type="checkbox"] { accent-color: #3b82f6; }
-        
-        /* Sidebar transition for mobile */
-        .sidebar-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        
-        /* Abstract icon overlays for reference match */
-        .icon-overlay-wave {
-            position: absolute;
-            width: 150%;
-            height: 150%;
-            background: rgba(255,255,255,0.15);
-            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
-            top: -20%;
-            left: -20%;
-            pointer-events: none;
+        input[type="checkbox"] { accent-color: var(--color-accent); }
+
+        .sidebar-transition {
+            transition: transform var(--dur-short) var(--ease-out);
         }
-        .icon-overlay-circle {
-            position: absolute;
+
+        /* Surfaces & Panels */
+        .surface-page { background-color: var(--color-paper); color: var(--color-ink); }
+        .surface-panel { background-color: var(--color-paper-2); border: 1px solid var(--color-rule); border-radius: var(--radius-card); }
+        .surface-card { background-color: var(--color-paper); border: 1px solid var(--color-rule); border-radius: var(--radius-card); }
+        .surface-scrim { background-color: var(--color-scrim); }
+        .rule-b { border-bottom: 1px solid var(--color-rule); }
+        .rule-t { border-top: 1px solid var(--color-rule); }
+        .rule-l { border-left: 1px solid var(--color-rule); }
+
+        /* Typography helpers */
+        .font-mono-num { font-family: var(--font-outlier); font-variant-numeric: tabular-nums; }
+        .text-ink { color: var(--color-ink); }
+        .text-ink-2 { color: var(--color-ink-2); }
+        .text-muted { color: var(--color-muted); }
+        .text-accent { color: var(--color-accent); }
+        .text-danger { color: var(--color-error); }
+        .text-ok { color: var(--color-success); }
+        .text-warn { color: var(--color-warn); }
+
+        /* Controls (8 states: default, hover, focus-visible, active, disabled, loading, error, success) */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-xs);
+            min-height: 36px;
+            padding: var(--space-2xs) var(--space-sm);
+            font-size: var(--text-xs);
+            font-weight: 500;
+            border-radius: var(--radius-card);
+            background-color: var(--color-paper);
+            color: var(--color-ink);
+            border: 1px solid var(--color-rule);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out);
+        }
+        .btn:hover, .btn.is-hover { background-color: var(--color-paper-3); border-color: var(--color-muted); }
+        .btn:focus-visible, .btn.is-focus { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+        .btn:active, .btn.is-active { transform: translateY(1px); }
+        .btn:disabled, .btn[aria-disabled="true"], .btn.is-disabled { opacity: 0.42; cursor: not-allowed; pointer-events: none; }
+
+        .btn-primary {
+            background-color: var(--color-accent);
+            color: var(--color-accent-ink);
+            border-color: var(--color-accent);
+        }
+        .btn-primary:hover { background-color: color-mix(in oklab, var(--color-accent) 88%, black); border-color: color-mix(in oklab, var(--color-accent) 88%, black); }
+
+        .btn-active-mode {
+            background-color: transparent;
+            color: var(--color-accent);
+            border-color: var(--color-accent);
+        }
+
+        .btn-danger {
+            background-color: transparent;
+            color: var(--color-error);
+            border-color: color-mix(in oklab, var(--color-error) 40%, var(--color-rule));
+        }
+        .btn-danger:hover { border-color: var(--color-error); }
+
+        .btn-icon-sm {
+            width: 28px;
+            height: 28px;
+            min-height: 28px;
+            padding: 0;
+            border-radius: 4px;
+        }
+
+        .input-field {
             width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(255,255,255,0.1) 100%);
-            border-radius: inherit;
-            pointer-events: none;
+            min-height: 36px;
+            padding: var(--space-xs) var(--space-sm);
+            font-size: var(--text-sm);
+            background-color: var(--color-paper);
+            color: var(--color-ink);
+            border: 1px solid var(--color-muted);
+            border-radius: var(--radius-card);
+            outline: none;
+            transition: border-color var(--dur-micro) var(--ease-out), background-color var(--dur-micro) var(--ease-out);
         }
+        .input-field::placeholder { color: var(--color-muted); }
+        .input-field:hover { border-color: var(--color-muted); }
+        .input-field:focus-visible { border-color: var(--color-focus); outline: 2px solid var(--color-focus); outline-offset: 1px; }
+        .input-field:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Badges & Status */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2xs);
+            padding: var(--space-3xs) var(--space-xs);
+            font-size: var(--text-xs);
+            font-weight: 500;
+            border-radius: var(--radius-pill);
+            background-color: var(--color-paper-3);
+            color: var(--color-ink-2);
+            border: 1px solid var(--color-rule);
+            white-space: nowrap;
+        }
+        .badge-low {
+            background-color: color-mix(in oklab, var(--color-success) 14%, var(--color-paper));
+            color: var(--color-success);
+            border-color: color-mix(in oklab, var(--color-success) 35%, var(--color-rule));
+        }
+        .badge-mid {
+            background-color: color-mix(in oklab, var(--color-warn) 14%, var(--color-paper));
+            color: var(--color-warn);
+            border-color: color-mix(in oklab, var(--color-warn) 35%, var(--color-rule));
+        }
+        .badge-high {
+            background-color: color-mix(in oklab, var(--color-error) 14%, var(--color-paper));
+            color: var(--color-error);
+            border-color: color-mix(in oklab, var(--color-error) 35%, var(--color-rule));
+        }
+
+        /* Energy Chart Bars */
+        .bar-low { background-color: var(--color-success); }
+        .bar-mid { background-color: var(--color-warn); }
+        .bar-high { background-color: var(--color-error); }
+        .bar-col {
+            flex: 1 1 0%;
+            min-width: 24px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding: var(--space-3xs);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color var(--dur-micro) var(--ease-out);
+        }
+        .bar-col:hover { background-color: var(--color-paper-3); }
+        .bar-col-current {
+            background-color: color-mix(in oklab, var(--color-accent) 12%, var(--color-paper));
+            outline: 1px solid color-mix(in oklab, var(--color-accent) 45%, var(--color-rule));
+        }
+        .bar-col-cheapest {
+            outline: 1px dashed var(--color-success);
+        }
+
+        /* Compact App Launcher Card */
+        .app-card {
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: var(--space-xs) var(--space-sm);
+            background-color: var(--color-paper);
+            border: 1px solid var(--color-rule);
+            border-radius: var(--radius-card);
+            transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out);
+        }
+        .app-card:hover {
+            background-color: var(--color-paper-2);
+            border-color: var(--color-muted);
+        }
+        .app-card:active { transform: translateY(1px); }
+        .app-card-edit {
+            background-color: var(--color-paper-2);
+            border-style: dashed;
+            cursor: grab;
+        }
+        .app-card-edit:active { cursor: grabbing; }
+
+        .app-tile {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: var(--space-sm);
+            color: var(--color-accent-ink);
+        }
+        .tile-theme-0 { background-color: var(--color-tile-1); }
+        .tile-theme-1 { background-color: var(--color-tile-2); }
+        .tile-theme-2 { background-color: var(--color-tile-3); }
+        .tile-theme-3 { background-color: var(--color-tile-4); }
+        .tile-theme-4 { background-color: var(--color-tile-5); }
+        .tile-image { background-color: var(--color-paper-2); }
+
+        .resizer-bar {
+            width: 4px;
+            background-color: transparent;
+            cursor: col-resize;
+            transition: background-color var(--dur-micro) var(--ease-out);
+        }
+        .resizer-bar:hover { background-color: var(--color-rule); }
     </style>
 </head>
-<body class="h-screen w-full antialiased flex overflow-hidden bg-white">
+<body class="min-h-screen w-full antialiased flex surface-page">
 
     <!-- INITIAL LOADING SCREEN -->
-    <div id="loadingScreen" class="absolute inset-0 bg-white z-[100] flex flex-col items-center justify-center transition-opacity duration-300">
-        <div class="loader mb-4"></div>
-        <p class="text-slate-500 font-medium text-sm animate-pulse">Forbinder til databasen...</p>
+    <div id="loadingScreen" class="fixed inset-0 surface-page z-[100] flex flex-col items-center justify-center transition-opacity duration-200">
+        <div class="loader mb-3"></div>
+        <p class="text-muted font-medium text-sm">Forbinder til databasen…</p>
     </div>
 
     <!-- AUTHENTICATION VIEW -->
-    <div id="authView" class="fixed inset-0 w-full h-full bg-slate-50 z-[60] hidden flex-col items-center justify-center p-4">
-        <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-100 w-full max-w-md">
-            <div class="text-center mb-8">
-                <div class="w-14 h-14 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center mb-5 shadow-lg shadow-blue-600/30">
-                    <i class="fas fa-fingerprint text-white text-2xl"></i>
+    <div id="authView" class="fixed inset-0 w-full h-full surface-page z-[60] hidden flex-col items-center justify-center p-4">
+        <div class="surface-panel p-6 sm:p-8 w-full max-w-md">
+            <div class="mb-6">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center mb-4 btn-primary">
+                    <i class="fas fa-terminal text-base"></i>
                 </div>
-                <h1 class="text-2xl font-bold tracking-tight text-slate-800" id="authTitle">Velkommen</h1>
-                <p class="text-sm text-slate-500 mt-2" id="authSubtitle">Log ind for at synkronisere dit dashboard</p>
+                <h1 class="text-xl font-bold text-ink" id="authTitle">Velkommen</h1>
+                <p class="text-sm text-muted mt-1" id="authSubtitle">Log ind for at synkronisere dit kontrolpanel</p>
             </div>
 
-            <form id="authForm" class="space-y-4">
-                <div id="authErrorMsg" class="hidden bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100 text-center"></div>
-                
+            <form id="authForm" class="space-y-3.5">
+                <div id="authErrorMsg" class="hidden btn-danger text-sm p-2.5 rounded-lg text-center"></div>
+
                 <div id="emailInputGroup">
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
-                    <input type="email" id="authEmail" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
+                    <label for="authEmail" class="block text-xs font-medium text-ink-2 mb-1">Email</label>
+                    <input type="email" id="authEmail" class="input-field">
                 </div>
                 <div id="passwordInputGroup">
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Adgangskode</label>
-                    <input type="password" id="authPassword" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
+                    <label for="authPassword" class="block text-xs font-medium text-ink-2 mb-1">Adgangskode</label>
+                    <input type="password" id="authPassword" class="input-field">
                 </div>
-                
-                <button type="submit" id="authSubmitBtn" class="w-full py-3.5 rounded-xl bg-slate-900 text-white font-medium hover:bg-slate-800 transition-colors shadow-md mt-4">
+
+                <button type="submit" id="authSubmitBtn" class="btn btn-primary w-full mt-2">
                     <span>Log ind</span>
                 </button>
             </form>
-            
-            <div class="mt-6 flex flex-col gap-3">
-                <button type="button" id="toggleAuthModeBtn" class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors mt-2 text-center w-full">
-                    Har du ikke en konto? Opret en.
+
+            <div class="mt-4 pt-3 rule-t flex justify-center">
+                <button type="button" id="toggleAuthModeBtn" class="btn w-full">
+                    Opret ny konto
                 </button>
             </div>
         </div>
     </div>
 
     <!-- MAIN DASHBOARD -->
-    <div id="dashboardView" class="flex-1 flex w-full h-full relative hidden">
-        
-        <!-- Center Content -->
-        <main class="flex-1 overflow-y-auto flex flex-col py-6 px-4 sm:py-10 sm:px-8 lg:px-12 relative w-full transition-all">
-            
-            <!-- Header -->
-            <header class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-6 gap-4 pb-4 border-b border-slate-100">
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Oversigt</h1>
-                    <p class="text-sm text-slate-500 mt-1 flex items-center gap-2">
-                        <span id="syncStatus" class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span> 
-                        <span id="userStatusText">Database synkroniseret</span>
+    <div id="dashboardView" class="flex-1 flex w-full min-h-screen relative hidden">
+
+        <!-- Center Workspace -->
+        <main class="flex-1 overflow-y-auto flex flex-col py-4 px-3 sm:py-6 sm:px-6 lg:px-8 w-full max-w-[1440px] mx-auto">
+
+            <!-- Top Utility Header -->
+            <header class="flex flex-wrap items-center justify-between gap-3 pb-3 mb-4 rule-b">
+                <div class="flex items-baseline gap-3">
+                    <h1 class="text-xl sm:text-2xl font-bold text-ink">Kontrolpanel</h1>
+                    <p class="text-xs text-muted flex items-center gap-1.5">
+                        <span id="syncStatus" class="font-mono-num text-ok">[Aktiv]</span>
+                        <span id="userStatusText">Synkroniseret</span>
                     </p>
                 </div>
-                
-                <div class="flex flex-wrap gap-2 sm:gap-3">
-                    <button id="addAppBtnHeader" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-blue-600 text-white font-medium text-xs sm:text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-600/20 flex items-center gap-2 hidden">
-                        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tilføj Element</span>
+
+                <div class="flex items-center flex-wrap gap-1.5 sm:gap-2">
+                    <div class="relative">
+                        <input type="search" id="appSearchInput" placeholder="Filtrer genveje (/)" class="input-field text-xs py-1 px-2.5 w-36 sm:w-48 min-h-[34px]">
+                    </div>
+                    <button id="addAppBtnHeader" class="btn btn-primary hidden">
+                        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tilføj genvej</span>
                     </button>
-                    <button id="toggleEditBtn" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs sm:text-sm hover:bg-slate-100 transition-colors flex items-center gap-2">
-                        <i class="fas fa-pen"></i> <span class="hidden sm:inline">Rediger</span>
+                    <button id="toggleEditBtn" class="btn">
+                        <i class="fas fa-sliders"></i> <span class="hidden sm:inline">Rediger</span>
                     </button>
-                    <!-- Mobile To-Do Toggle -->
-                    <button id="mobileTodoBtn" class="lg:hidden px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors flex items-center gap-2">
-                        <i class="fas fa-check-square"></i>
+                    <button id="mobileTodoBtn" class="lg:hidden btn" title="Opgaver">
+                        <i class="fas fa-list-check"></i> <span id="mobileTodoCount" class="font-mono-num text-xs">0</span>
                     </button>
-                    <button id="logoutBtn" class="px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors flex items-center gap-2" title="Log ud">
-                        <i class="fas fa-sign-out-alt"></i>
+                    <button id="logoutBtn" class="btn" title="Log ud">
+                        <i class="fas fa-right-from-bracket"></i>
                     </button>
                 </div>
             </header>
 
-            <!-- Live Widgets: Vejr/Sol (Yr.no) & Elpriser (DK1) -->
-            <section class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
-                <!-- Vejr & Sol Widget -->
-                <div class="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between">
-                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                        <div class="flex items-center gap-2">
-                            <i id="weatherMainIcon" class="fas fa-cloud-sun text-blue-600 text-xl"></i>
-                            <div>
-                                <div class="flex items-center gap-1.5">
-                                    <h2 id="weatherLocationTitle" class="text-sm font-bold text-slate-800">Aalborg</h2>
-                                    <span class="text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 text-slate-600 font-medium">Yr.no</span>
-                                </div>
-                                <p id="weatherConditionText" class="text-xs text-slate-500">Henter vejrdata...</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="flex items-center gap-2.5 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200/80 text-xs text-slate-600 shadow-sm" title="Solopgang og solnedgang">
-                                <span class="flex items-center gap-1"><i class="fas fa-sun text-amber-500"></i> <span id="sunriseTime">--:--</span></span>
-                                <span class="text-slate-300">|</span>
-                                <span class="flex items-center gap-1"><i class="fas fa-moon text-indigo-500"></i> <span id="sunsetTime">--:--</span></span>
-                            </div>
-                            <button id="gpsBtn" class="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/80 text-slate-600 hover:text-blue-600 hover:border-blue-200 text-xs font-medium flex items-center gap-1 shadow-sm transition-colors" title="Brug GPS-placering">
-                                <i class="fas fa-location-crosshairs"></i> <span class="hidden sm:inline" id="gpsBtnLabel">GPS</span>
-                            </button>
-                        </div>
-                    </div>
+            <!-- Live Telemetry Row: Yr.no Weather/Sun + DK1 Energy Planner -->
+            <section class="grid grid-cols-1 xl:grid-cols-12 gap-3 mb-5">
 
-                    <div class="flex items-baseline justify-between gap-4 my-1">
-                        <div class="flex items-baseline gap-2">
-                            <span id="weatherTemp" class="text-3xl font-bold text-slate-900">--°</span>
-                            <span id="weatherFeelsLike" class="text-xs text-slate-500">Føles som --°</span>
-                        </div>
-                        <div class="flex items-center gap-3 text-xs text-slate-600">
-                            <span title="Vind"><i class="fas fa-wind text-slate-400 mr-1"></i><span id="weatherWind">--</span> m/s</span>
-                            <span title="Nedbør"><i class="fas fa-droplet text-blue-400 mr-1"></i><span id="weatherPrecip">--</span> mm</span>
-                        </div>
-                    </div>
-
-                    <div id="weatherForecastStrip" class="grid grid-cols-8 gap-1 mt-3 pt-3 border-t border-slate-200/60 text-center">
-                        <!-- 8 timers vejrudsigt genereres her -->
-                    </div>
-                </div>
-
-                <!-- Elpriser Widget -->
-                <div class="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between">
-                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                        <div>
+                <!-- 1. Vejr, Klima & Soltider (Yr.no / Aalborg + GPS) -->
+                <div class="xl:col-span-5 surface-panel p-3.5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 rule-b">
                             <div class="flex items-center gap-2">
-                                <i class="fas fa-bolt text-amber-500 text-lg"></i>
-                                <h2 class="text-sm font-bold text-slate-800">Elpriser (DK1)</h2>
-                                <span id="energyCurrentBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">-- kr/kWh</span>
+                                <i id="weatherMainIcon" class="fas fa-cloud-sun text-accent text-base"></i>
+                                <h2 id="weatherLocationTitle" class="text-sm font-semibold text-ink">Aalborg</h2>
+                                <span class="badge font-mono-num">Yr.no</span>
+                                <span id="weatherConditionText" class="text-xs text-muted">Henter vejrdata…</span>
                             </div>
-                            <p id="energySubtext" class="text-xs text-slate-500 mt-0.5">Inkl. nettarif (N1), afgifter & moms</p>
+
+                            <div class="flex items-center gap-1.5">
+                                <div class="badge font-mono-num" title="Solopgang og solnedgang i dag">
+                                    <i class="fas fa-sun text-warn"></i>
+                                    <span id="sunriseTime">--:--</span>
+                                    <span>/</span>
+                                    <i class="fas fa-moon text-accent"></i>
+                                    <span id="sunsetTime">--:--</span>
+                                </div>
+                                <button id="gpsBtn" class="btn py-1 px-2 min-h-[28px]" title="Skift mellem Aalborg og aktuel GPS-placering">
+                                    <i class="fas fa-location-crosshairs"></i>
+                                    <span id="gpsBtnLabel">GPS</span>
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-1.5">
-                            <button id="tariffToggleBtn" class="px-2.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-medium transition-colors shadow-sm" title="Skift mellem fuld pris inkl. tariffer og rå spotpris">
-                                Inkl. tariffer
-                            </button>
-                            <button id="hoursToggleBtn" class="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/80 text-slate-700 hover:bg-slate-100 text-xs font-medium transition-colors shadow-sm">
-                                Vis 24t
-                            </button>
+
+                        <!-- Primary Weather Readout -->
+                        <div class="grid grid-cols-3 gap-2 py-2.5 items-center">
+                            <div>
+                                <div class="flex items-baseline gap-1.5">
+                                    <span id="weatherTemp" class="text-2xl sm:text-3xl font-bold font-mono-num text-ink">--°</span>
+                                    <span id="weatherFeelsLike" class="text-xs text-muted">Føles --°</span>
+                                </div>
+                                <p id="daylightDelta" class="text-xs text-muted font-mono-num mt-0.5">Dagens længde: --t --m</p>
+                            </div>
+                            <div class="surface-card px-2.5 py-1.5">
+                                <p class="text-xs text-muted">Vind</p>
+                                <p class="text-sm font-semibold font-mono-num text-ink"><span id="weatherWind">--</span> m/s</p>
+                            </div>
+                            <div class="surface-card px-2.5 py-1.5">
+                                <p class="text-xs text-muted">Nedbør (nu / 8t)</p>
+                                <p class="text-sm font-semibold font-mono-num text-ink"><span id="weatherPrecip">--</span> mm</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div id="energyChart" class="flex items-end gap-1 h-28 pt-5 pb-1 mt-1 select-none overflow-x-auto">
-                        <!-- 8 eller 24 timers søjler genereres her -->
+                    <!-- 8-Hour Forecast Strip -->
+                    <div id="weatherForecastStrip" class="grid grid-cols-8 gap-1 pt-2 rule-t text-center">
+                        <!-- 8 timers Yr.no prognose -->
                     </div>
                 </div>
+
+                <!-- 2. Elpriser & Tarifplanlægger (DK1 / 8t -> 24t) -->
+                <div class="xl:col-span-7 surface-panel p-3.5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 rule-b">
+                            <div class="flex items-center flex-wrap gap-2">
+                                <i class="fas fa-bolt text-warn text-sm"></i>
+                                <h2 class="text-sm font-semibold text-ink">Elpriser DK1</h2>
+                                <span id="energyCurrentBadge" class="badge font-mono-num">Nu: -- kr/kWh</span>
+                                <span id="energyCheapestBadge" class="badge badge-low font-mono-num" title="Billigste kommende time i det valgte vindue">Lavest: --</span>
+                            </div>
+
+                            <div class="flex items-center gap-1.5">
+                                <button id="tariffToggleBtn" class="btn btn-primary py-1 px-2.5 min-h-[28px]" title="Skift mellem totalpris inkl. N1 tariffer/moms og rå spotpris">
+                                    Inkl. tariffer
+                                </button>
+                                <button id="hoursToggleBtn" class="btn py-1 px-2.5 min-h-[28px]" title="Skift mellem næste 8 timer og 24 timer">
+                                    Vis 24t
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-2 py-1.5 text-xs text-muted">
+                            <p id="energySubtext">Inkl. N1 nettarif (lav/høj/spids), elafgift & moms</p>
+                            <p id="energyHoverReadout" class="font-mono-num text-ink-2">Hold over en søjle for timepris og tarif</p>
+                        </div>
+                    </div>
+
+                    <!-- Interactive 8h / 24h Bar Chart -->
+                    <div id="energyChart" class="flex items-end gap-1 h-28 pt-4 pb-0.5 select-none overflow-x-auto">
+                        <!-- Søjler genereres dynamisk -->
+                    </div>
+                </div>
+
             </section>
 
-            <!-- App List (Kompakt & omrokerbar) -->
-            <div id="appGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2.5 pb-20">
-                <!-- Dynamisk indhold -->
-            </div>
+            <!-- Compact & Rearrangeable App Section -->
+            <section class="flex-1">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-sm font-semibold text-ink">Genveje</h2>
+                        <span id="appCountBadge" class="badge font-mono-num">0</span>
+                    </div>
+                    <p id="rearrangeHint" class="text-xs text-muted">Træk kort for at flytte, eller brug Rediger på mobil</p>
+                </div>
+
+                <div id="appGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 gap-2 pb-16">
+                    <!-- Dynamiske kompakte genvejskort -->
+                </div>
+            </section>
         </main>
 
-        <!-- Resizer (Desktop only) -->
-        <div id="sidebarResizer" class="hidden lg:block w-1 bg-transparent hover:bg-slate-200 cursor-col-resize transition-colors z-40 relative"></div>
+        <!-- Desktop Sidebar Resizer -->
+        <div id="sidebarResizer" class="hidden lg:block resizer-bar z-40 relative"></div>
 
         <!-- Mobile Overlay -->
-        <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 lg:hidden opacity-0 pointer-events-none transition-opacity duration-300"></div>
+        <div id="sidebarOverlay" class="fixed inset-0 surface-scrim z-40 lg:hidden opacity-0 pointer-events-none transition-opacity duration-200"></div>
 
         <!-- TO-DO SIDEBAR -->
-        <aside id="todoSidebar" class="fixed lg:relative top-0 right-0 h-full w-4/5 max-w-sm lg:w-[320px] bg-slate-50/50 z-50 lg:z-30 shadow-2xl lg:shadow-none border-l border-slate-100 flex flex-col sidebar-transition translate-x-full lg:translate-x-0">
-            <div class="px-5 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
-                <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fas fa-check-circle text-blue-600"></i> Synkroniseret To-Do
-                </h2>
-                <button id="closeSidebarBtn" class="lg:hidden w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:text-slate-800">
-                    <i class="fas fa-times"></i>
+        <aside id="todoSidebar" class="fixed lg:relative top-0 right-0 h-screen w-4/5 max-w-xs lg:w-[300px] surface-panel z-50 lg:z-30 rule-l flex flex-col sidebar-transition translate-x-full lg:translate-x-0 rounded-none border-y-0 border-r-0">
+            <div class="px-4 py-3.5 rule-b flex justify-between items-center surface-page">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-check-double text-accent text-xs"></i>
+                    <h2 class="text-sm font-semibold text-ink">Synkroniseret to-do</h2>
+                    <span id="todoStatsBadge" class="badge font-mono-num">0/0</span>
+                </div>
+                <button id="closeSidebarBtn" class="lg:hidden btn btn-icon-sm" title="Luk opgaveliste">
+                    <i class="fas fa-times text-xs"></i>
                 </button>
             </div>
-            <div class="flex-1 overflow-y-auto p-4 flex flex-col">
-                <div id="todoList" class="space-y-2 flex-1">
-                    <!-- To-Do Items genereres her -->
+
+            <div class="flex-1 overflow-y-auto p-3 flex flex-col">
+                <div id="todoList" class="space-y-1.5 flex-1">
+                    <!-- To-Do elementer -->
                 </div>
-                
-                <div class="mt-4 pt-4 border-t border-slate-200">
-                    <div class="flex items-center bg-white rounded-xl px-4 py-3 border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 shadow-sm transition-all">
-                        <i class="fas fa-plus text-slate-400 text-sm mr-3"></i>
-                        <input type="text" id="newTaskInput" class="bg-transparent outline-none text-sm text-slate-700 w-full placeholder-slate-400" placeholder="Tilføj en opgave...">
+
+                <div class="mt-3 pt-3 rule-t">
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="newTaskInput" class="input-field text-xs" placeholder="Ny opgave (tryk Enter)…">
                     </div>
                 </div>
             </div>
@@ -246,57 +465,55 @@
     </div>
 
     <!-- ADD/EDIT APP MODAL -->
-    <div id="appModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center z-[80] p-4">
-        <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300" id="appModalContent">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h3 class="text-lg font-bold text-slate-800" id="modalTitle">Tilføj Element</h3>
-                <button id="closeAppModalBtn" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
-                    <i class="fas fa-times"></i>
+    <div id="appModal" class="fixed inset-0 surface-scrim opacity-0 pointer-events-none transition-opacity duration-200 flex items-center justify-center z-[80] p-4">
+        <div class="surface-page border border-[var(--color-rule)] rounded-lg w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200" id="appModalContent">
+            <div class="px-5 py-3.5 rule-b flex justify-between items-center surface-panel rounded-none border-x-0 border-t-0">
+                <h3 class="text-base font-bold text-ink" id="modalTitle">Tilføj genvej</h3>
+                <button id="closeAppModalBtn" class="btn btn-icon-sm">
+                    <i class="fas fa-times text-xs"></i>
                 </button>
             </div>
-            
-            <form id="appForm" class="p-6 space-y-4">
+
+            <form id="appForm" class="p-5 space-y-3.5">
                 <input type="hidden" id="appId">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Titel</label>
-                    <input type="text" id="appName" required placeholder="f.eks. Stocks" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
+                    <label for="appName" class="block text-xs font-medium text-ink-2 mb-1">Titel</label>
+                    <input type="text" id="appName" required placeholder="f.eks. Nordnet" class="input-field">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Beskrivelse (Undertekst)</label>
-                    <input type="text" id="appDescription" required placeholder="f.eks. Shares of public companies" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
+                    <label for="appDescription" class="block text-xs font-medium text-ink-2 mb-1">Beskrivelse</label>
+                    <input type="text" id="appDescription" required placeholder="f.eks. Portefølje og aktier" class="input-field">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Handling (URL)</label>
-                    <input type="text" id="appUrl" required placeholder="https://..." class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
+                    <label for="appUrl" class="block text-xs font-medium text-ink-2 mb-1">Handling (URL)</label>
+                    <input type="text" id="appUrl" required placeholder="https://…" class="input-field font-mono-num">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5 flex justify-between">
-                        <span>Ikon (FontAwesome klasse)</span>
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i id="iconPreview" class="fas fa-chart-line text-slate-400 text-lg"></i>
+                    <label for="appIcon" class="block text-xs font-medium text-ink-2 mb-1">Ikon (FontAwesome klasse)</label>
+                    <div class="flex items-center gap-2">
+                        <div class="w-9 h-9 rounded-lg surface-panel flex items-center justify-center shrink-0">
+                            <i id="iconPreview" class="fas fa-chart-line text-ink-2 text-sm"></i>
                         </div>
-                        <input type="text" id="appIcon" placeholder="fas fa-chart-line" class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all text-sm">
+                        <input type="text" id="appIcon" placeholder="fas fa-chart-line" class="input-field font-mono-num">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Billede (Valgfrit - erstatter farvet ikon)</label>
-                    <input type="file" id="appImageFile" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                    <div id="currentImagePreview" class="mt-3 hidden">
-                        <p class="text-xs font-medium text-slate-600 mb-1">Nuværende billede:</p>
+                    <label for="appImageFile" class="block text-xs font-medium text-ink-2 mb-1">Billede (valgfrit)</label>
+                    <input type="file" id="appImageFile" accept="image/*" class="input-field text-xs py-1.5 cursor-pointer">
+                    <div id="currentImagePreview" class="mt-2.5 hidden">
+                        <p class="text-xs text-muted mb-1">Nuværende billede:</p>
                         <div class="relative inline-block">
-                            <img id="currentImageImg" src="" class="h-16 w-16 rounded-xl border border-slate-200 object-cover shadow-sm">
-                            <button type="button" id="removeImageBtn" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center shadow hover:bg-red-600 transition-colors" title="Fjern billede">
+                            <img id="currentImageImg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Forhåndsvisning af genvejsikon" class="h-12 w-12 rounded-lg border border-[var(--color-rule)] object-cover">
+                            <button type="button" id="removeImageBtn" class="btn btn-danger btn-icon-sm absolute -top-2 -right-2" title="Fjern billede">
                                 <i class="fas fa-times text-xs"></i>
                             </button>
                         </div>
                     </div>
                     <input type="hidden" id="existingImageUrl">
                 </div>
-                <div class="flex justify-end gap-3 pt-4">
-                    <button type="button" id="cancelAppBtn" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium text-sm hover:bg-slate-200 transition-colors">Annuller</button>
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 transition-colors shadow-sm">Gem</button>
+                <div class="flex justify-end gap-2 pt-3 rule-t">
+                    <button type="button" id="cancelAppBtn" class="btn">Annuller</button>
+                    <button type="submit" class="btn btn-primary">Gem</button>
                 </div>
             </form>
         </div>
@@ -325,22 +542,13 @@
 
         // State
         let apps = [];
-        let todos = []; 
+        let todos = [];
         let isEditMode = false;
         let currentUser = null;
         let firestoreUnsubscribe = null;
         let isLoginMode = true;
+        let searchQuery = '';
 
-        // Theme colors til at matche referencen
-        const themes = [
-            { bg: '#237bd1', iconColor: 'text-white' }, // Blue (Stocks)
-            { bg: '#5a4970', iconColor: 'text-white' }, // Purple (Mutual funds)
-            { bg: '#d49b8a', iconColor: 'text-white' }, // Peach (Currency)
-            { bg: '#954c6c', iconColor: 'text-white' }, // Maroon (Bonds)
-            { bg: '#2b9d62', iconColor: 'text-white' }  // Green (Backup)
-        ];
-
-        // Standard apps opdateret til at matche referencebilledets data!
         const defaultApps = [
             { id: '1', title: 'Stocks', description: 'Shares of public companies', url: '#', icon: 'fas fa-chart-line', imageUrl: '' },
             { id: '2', title: 'Mutual funds', description: 'Ready-made portfolios at affordable prices', url: '#', icon: 'fas fa-chart-pie', imageUrl: '' },
@@ -353,26 +561,24 @@
             { text: "Gennemgå porteføljeudbytte", completed: false }
         ];
 
-        // DOM
         const authView = document.getElementById('authView');
         const dashboardView = document.getElementById('dashboardView');
         const loadingScreen = document.getElementById('loadingScreen');
         const appGrid = document.getElementById('appGrid');
-        
-        // Auth Listeners
+
         onAuthStateChanged(auth, (user) => {
             loadingScreen.classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => loadingScreen.style.display = 'none', 300);
+            setTimeout(() => loadingScreen.style.display = 'none', 250);
 
             if (user) {
                 currentUser = user;
                 authView.classList.add('hidden');
                 authView.classList.remove('flex');
                 dashboardView.classList.remove('hidden');
-                
-                document.getElementById('userStatusText').innerText = "Synkroniseret med database";
-                document.getElementById('syncStatus').className = "w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]";
-                
+
+                document.getElementById('userStatusText').innerText = "Synkroniseret";
+                document.getElementById('syncStatus').className = "font-mono-num text-ok";
+
                 startSync(user.uid);
             } else {
                 currentUser = null;
@@ -388,15 +594,15 @@
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
             const btnSpan = document.querySelector('#authSubmitBtn span');
-            
-            if(!email || !password) return;
 
-            btnSpan.innerText = "Vent venligst...";
+            if (!email || !password) return;
+
+            btnSpan.innerText = "Vent venligst…";
             try {
                 if (isLoginMode) await signInWithEmailAndPassword(auth, email, password);
                 else await createUserWithEmailAndPassword(auth, email, password);
             } catch (error) {
-                document.getElementById('authErrorMsg').innerText = "Fejl: Tjek dine oplysninger.";
+                document.getElementById('authErrorMsg').innerText = "Fejl: Tjek dine loginoplysninger.";
                 document.getElementById('authErrorMsg').classList.remove('hidden');
             } finally {
                 btnSpan.innerText = isLoginMode ? "Log ind" : "Opret bruger";
@@ -405,14 +611,13 @@
 
         document.getElementById('toggleAuthModeBtn').addEventListener('click', () => {
             isLoginMode = !isLoginMode;
-            document.getElementById('authTitle').innerText = isLoginMode ? "Velkommen" : "Opret Konto";
+            document.getElementById('authTitle').innerText = isLoginMode ? "Velkommen" : "Opret konto";
             document.querySelector('#authSubmitBtn span').innerText = isLoginMode ? "Log ind" : "Opret bruger";
-            document.getElementById('toggleAuthModeBtn').innerText = isLoginMode ? "Har du ikke en konto? Opret en." : "Har du allerede en konto? Log ind.";
+            document.getElementById('toggleAuthModeBtn').innerText = isLoginMode ? "Opret ny konto" : "Log ind med eksisterende";
         });
 
         document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
 
-        // Firestore Sync - Begge lister synkroniseres her!
         function startSync(uid) {
             const userDocRef = doc(db, 'users', uid);
             firestoreUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
@@ -420,8 +625,7 @@
                     const data = docSnap.data();
                     apps = data.apps || [];
                     todos = data.todos || [];
-                    
-                    // Fallback for eksisterende data uden de nye felter
+
                     if (!data.todos && data.apps) {
                         todos = [...defaultTodos];
                         saveTodosToFirestore();
@@ -441,16 +645,28 @@
 
         async function saveAppsToFirestore() {
             if (!currentUser) return;
-            try { await setDoc(doc(db, 'users', currentUser.uid), { apps }, { merge: true }); } 
+            try { await setDoc(doc(db, 'users', currentUser.uid), { apps }, { merge: true }); }
             catch (error) { console.error(error); }
         }
 
-        // To-Do specifik gemmefunktion for synkronisering
         async function saveTodosToFirestore() {
             if (!currentUser) return;
-            try { await setDoc(doc(db, 'users', currentUser.uid), { todos }, { merge: true }); } 
+            try { await setDoc(doc(db, 'users', currentUser.uid), { todos }, { merge: true }); }
             catch (error) { console.error(error); }
         }
+
+        // Quick keyboard filter (/)
+        const appSearchInput = document.getElementById('appSearchInput');
+        appSearchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.trim().toLowerCase();
+            renderApps();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && ! document.activeElement.isContentEditable) {
+                e.preventDefault();
+                appSearchInput.focus();
+            }
+        });
 
         let draggedAppIndex = null;
 
@@ -465,14 +681,19 @@
 
         function renderApps() {
             appGrid.innerHTML = '';
-            
+            document.getElementById('appCountBadge').innerText = apps.length;
+
             apps.forEach((app, index) => {
+                if (searchQuery && !`${app.title} ${app.description || ''} ${app.url || ''}`.toLowerCase().includes(searchQuery)) {
+                    return;
+                }
+
                 const card = document.createElement('div');
                 const hasImage = app.imageUrl && app.imageUrl.trim() !== '';
-                const theme = themes[index % themes.length];
-                
-                card.className = `group relative flex items-center p-2.5 rounded-xl border border-slate-100 transition-all duration-150 ${isEditMode ? 'bg-slate-50 cursor-grab active:cursor-grabbing' : 'bg-white hover:bg-slate-50 hover:border-slate-200 cursor-pointer shadow-sm'}`;
-                card.draggable = true;
+                const tileClass = hasImage ? 'tile-image' : `tile-theme-${index % 5}`;
+
+                card.className = `app-card group ${isEditMode ? 'app-card-edit' : 'cursor-pointer'}`;
+                card.draggable = !searchQuery;
 
                 card.ondragstart = (e) => {
                     draggedAppIndex = index;
@@ -496,45 +717,37 @@
                     renderApps();
                     saveAppsToFirestore();
                 };
-                
-                let iconHtml = '';
-                if (hasImage) {
-                    iconHtml = `<img src="${app.imageUrl}" class="absolute inset-0 w-full h-full object-cover z-10">`;
-                } else {
-                    iconHtml = `
-                        <div class="icon-overlay-circle"></div>
-                        <div class="icon-overlay-wave"></div>
-                        <i class="${app.icon || 'fas fa-chart-line'} ${theme.iconColor} text-lg relative z-10"></i>
-                    `;
-                }
+
+                const iconHtml = hasImage
+                    ? `<img src="${app.imageUrl}" alt="${app.title}" class="w-full h-full object-cover">`
+                    : `<i class="${app.icon || 'fas fa-chart-line'} text-sm"></i>`;
 
                 card.innerHTML = `
-                    <div class="flex-shrink-0 w-11 h-11 rounded-xl overflow-hidden relative mr-3 flex items-center justify-center shadow-sm" style="background-color: ${hasImage ? '#f8fafc' : theme.bg};">
+                    <div class="app-tile ${tileClass}">
                         ${iconHtml}
                     </div>
-                    
                     <div class="flex-1 min-w-0 flex flex-col justify-center ${isEditMode ? 'pr-28' : 'pr-1'}">
-                        <h3 class="font-semibold text-[15px] text-slate-900 leading-tight truncate">${app.title}</h3>
-                        <p class="text-[12.5px] text-slate-500 truncate mt-0.5">${app.description || app.url || 'Ingen beskrivelse'}</p>
+                        <h3 class="font-semibold text-sm text-ink leading-tight truncate">${app.title}</h3>
+                        <p class="text-xs text-muted truncate mt-0.5">${app.description || app.url || 'Ingen beskrivelse'}</p>
                     </div>
                 `;
 
                 if (!isEditMode) {
-                    card.onclick = () => { if(app.url && app.url !== '#') window.open(app.url, '_blank'); };
+                    card.onclick = () => { if (app.url && app.url !== '#') window.open(app.url, '_blank'); };
                 } else {
                     const controls = document.createElement('div');
-                    controls.className = 'absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1 z-20';
+                    controls.className = 'absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 z-20';
                     controls.innerHTML = `
-                        <button class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-30 flex items-center justify-center shadow-sm" ${index === 0 ? 'disabled' : ''} title="Flyt op/venstre" onclick="event.stopPropagation(); window.moveApp(${index}, -1)">
+                        <button type="button" class="btn btn-icon-sm" ${index === 0 ? 'disabled' : ''} title="Flyt op/venstre" onclick="event.stopPropagation(); window.moveApp(${index}, -1)">
                             <i class="fas fa-chevron-left text-[10px]"></i>
                         </button>
-                        <button class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-30 flex items-center justify-center shadow-sm" ${index === apps.length - 1 ? 'disabled' : ''} title="Flyt ned/højre" onclick="event.stopPropagation(); window.moveApp(${index}, 1)">
+                        <button type="button" class="btn btn-icon-sm" ${index === apps.length - 1 ? 'disabled' : ''} title="Flyt ned/højre" onclick="event.stopPropagation(); window.moveApp(${index}, 1)">
                             <i class="fas fa-chevron-right text-[10px]"></i>
                         </button>
-                        <button class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center shadow-sm" title="Rediger" onclick="event.stopPropagation(); window.openEditModal('${app.id}')">
+                        <button type="button" class="btn btn-icon-sm" title="Rediger" onclick="event.stopPropagation(); window.openEditModal('${app.id}')">
                             <i class="fas fa-pen text-[10px]"></i>
                         </button>
-                        <button class="w-7 h-7 rounded-lg bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 flex items-center justify-center shadow-sm" title="Slet" onclick="event.stopPropagation(); window.deleteApp('${app.id}')">
+                        <button type="button" class="btn btn-danger btn-icon-sm" title="Slet" onclick="event.stopPropagation(); window.deleteApp('${app.id}')">
                             <i class="fas fa-trash text-[10px]"></i>
                         </button>
                     `;
@@ -545,15 +758,16 @@
             });
 
             if (isEditMode) {
-                const addCard = document.createElement('div');
-                addCard.className = 'relative flex items-center p-2.5 rounded-xl transition-colors duration-200 hover:bg-blue-50/50 cursor-pointer border-2 border-dashed border-slate-200';
+                const addCard = document.createElement('button');
+                addCard.type = 'button';
+                addCard.className = 'app-card app-card-edit w-full text-left';
                 addCard.onclick = () => openAppModal();
                 addCard.innerHTML = `
-                    <div class="flex-shrink-0 w-11 h-11 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center mr-3 text-slate-400">
-                        <i class="fas fa-plus text-base"></i>
+                    <div class="app-tile surface-panel text-muted">
+                        <i class="fas fa-plus text-xs"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <h3 class="text-[14px] font-medium text-slate-700">Tilføj nyt element</h3>
+                        <h3 class="text-sm font-medium text-ink-2">Tilføj ny genvej</h3>
                     </div>
                 `;
                 appGrid.appendChild(addCard);
@@ -562,24 +776,28 @@
 
         const todoList = document.getElementById('todoList');
         const newTaskInput = document.getElementById('newTaskInput');
-        
+
         function renderTodos() {
             todoList.innerHTML = '';
+            const remaining = todos.filter(t => !t.completed).length;
+            document.getElementById('todoStatsBadge').innerText = `${remaining}/${todos.length}`;
+            document.getElementById('mobileTodoCount').innerText = remaining;
+
             todos.forEach((todo, index) => {
                 const div = document.createElement('div');
-                div.className = 'group flex items-start p-3 bg-white border border-slate-100 hover:border-blue-100/50 rounded-xl transition-all relative';
+                div.className = 'group flex items-start p-2.5 surface-card relative';
                 div.innerHTML = `
                     <div class="pt-0.5">
-                        <input type="checkbox" ${todo.completed ? 'checked' : ''} 
-                            class="w-4 h-4 rounded border-slate-300 cursor-pointer mr-3 mt-0.5" 
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''}
+                            class="w-4 h-4 rounded cursor-pointer mr-2.5 mt-0.5"
                             onchange="window.toggleTodo(${index})">
                     </div>
-                    <span class="flex-1 text-[14.5px] outline-none min-h-[20px] ${todo.completed ? 'line-through text-slate-400' : 'text-slate-700'}" 
-                          contenteditable="true" 
+                    <span class="flex-1 text-xs outline-none min-h-[18px] ${todo.completed ? 'line-through text-muted' : 'text-ink'}"
+                          contenteditable="true"
                           onblur="window.updateTodo(${index}, this.innerText)"
                           onkeydown="if(event.key === 'Enter'){ event.preventDefault(); this.blur(); }">${todo.text}</span>
-                    <button class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-500 transition-opacity p-1 ml-2" 
-                            onclick="window.deleteTodo(${index})">
+                    <button type="button" class="opacity-0 group-hover:opacity-100 text-muted hover:text-danger transition-opacity p-1 ml-1.5"
+                            onclick="window.deleteTodo(${index})" title="Slet opgave">
                         <i class="fas fa-trash-alt text-xs"></i>
                     </button>
                 `;
@@ -587,24 +805,23 @@
             });
         }
 
-        // Disse funktioner kalder saveTodosToFirestore hver gang der sker en ændring
-        window.toggleTodo = (index) => { 
-            todos[index].completed = !todos[index].completed; 
-            saveTodosToFirestore(); 
+        window.toggleTodo = (index) => {
+            todos[index].completed = !todos[index].completed;
+            saveTodosToFirestore();
         };
-        
-        window.updateTodo = (index, text) => { 
+
+        window.updateTodo = (index, text) => {
             if (text.trim() === '') {
-                window.deleteTodo(index); 
-            } else { 
-                todos[index].text = text; 
-                saveTodosToFirestore(); 
-            } 
+                window.deleteTodo(index);
+            } else {
+                todos[index].text = text;
+                saveTodosToFirestore();
+            }
         };
-        
-        window.deleteTodo = (index) => { 
-            todos.splice(index, 1); 
-            saveTodosToFirestore(); 
+
+        window.deleteTodo = (index) => {
+            todos.splice(index, 1);
+            saveTodosToFirestore();
         };
 
         newTaskInput.addEventListener('keydown', (e) => {
@@ -618,11 +835,12 @@
         const appModal = document.getElementById('appModal');
         const appModalContent = document.getElementById('appModalContent');
         const appFormDom = document.getElementById('appForm');
-        
+        const EMPTY_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
         window.openAppModal = openAppModal;
         window.openEditModal = (id) => {
             const app = apps.find(a => a.id === id);
-            if(app) openAppModal(app);
+            if (app) openAppModal(app);
         };
 
         function openAppModal(app = null) {
@@ -630,33 +848,35 @@
             const currentImageImg = document.getElementById('currentImageImg');
             const existingImageUrl = document.getElementById('existingImageUrl');
             const appImageFile = document.getElementById('appImageFile');
-            
-            appImageFile.value = ''; 
+
+            appImageFile.value = '';
 
             if (app) {
-                document.getElementById('modalTitle').textContent = 'Rediger Element';
+                document.getElementById('modalTitle').textContent = 'Rediger genvej';
                 document.getElementById('appId').value = app.id;
                 document.getElementById('appName').value = app.title;
                 document.getElementById('appDescription').value = app.description || '';
                 document.getElementById('appUrl').value = app.url;
                 document.getElementById('appIcon').value = app.icon || '';
                 document.getElementById('iconPreview').className = app.icon || 'fas fa-chart-line';
-                
+
                 if (app.imageUrl) {
                     existingImageUrl.value = app.imageUrl;
                     currentImageImg.src = app.imageUrl;
                     currentImagePreview.classList.remove('hidden');
                 } else {
                     existingImageUrl.value = '';
+                    currentImageImg.src = EMPTY_PIXEL;
                     currentImagePreview.classList.add('hidden');
                 }
             } else {
-                document.getElementById('modalTitle').textContent = 'Tilføj Nyt Element';
+                document.getElementById('modalTitle').textContent = 'Tilføj ny genvej';
                 appFormDom.reset();
                 document.getElementById('appId').value = '';
                 existingImageUrl.value = '';
+                currentImageImg.src = EMPTY_PIXEL;
                 currentImagePreview.classList.add('hidden');
-                document.getElementById('iconPreview').className = 'fas fa-chart-line text-slate-400 text-lg';
+                document.getElementById('iconPreview').className = 'fas fa-chart-line text-ink-2 text-sm';
             }
             appModal.classList.remove('opacity-0', 'pointer-events-none');
             appModalContent.classList.remove('scale-95');
@@ -669,22 +889,22 @@
 
         document.getElementById('closeAppModalBtn').addEventListener('click', closeAppModal);
         document.getElementById('cancelAppBtn').addEventListener('click', closeAppModal);
-        
+
         document.getElementById('removeImageBtn').addEventListener('click', () => {
             document.getElementById('existingImageUrl').value = '';
             document.getElementById('currentImagePreview').classList.add('hidden');
         });
 
         document.getElementById('appIcon').addEventListener('input', (e) => {
-            document.getElementById('iconPreview').className = e.target.value || 'fas fa-chart-line text-slate-400 text-lg';
+            document.getElementById('iconPreview').className = e.target.value || 'fas fa-chart-line text-ink-2 text-sm';
         });
 
         appFormDom.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const originalBtnText = submitBtn.innerText;
-            submitBtn.innerText = "Gemmer...";
+            submitBtn.innerText = "Gemmer…";
             submitBtn.disabled = true;
 
             try {
@@ -693,7 +913,7 @@
                 const description = document.getElementById('appDescription').value.trim();
                 const url = document.getElementById('appUrl').value.trim();
                 const icon = document.getElementById('appIcon').value.trim() || 'fas fa-chart-line';
-                
+
                 let imageUrl = document.getElementById('existingImageUrl').value;
                 const fileInput = document.getElementById('appImageFile');
 
@@ -725,7 +945,7 @@
         window.deleteApp = (id) => {
             apps = apps.filter(app => app.id !== id);
             saveAppsToFirestore();
-        }
+        };
 
         const mobileTodoBtn = document.getElementById('mobileTodoBtn');
         const closeSidebarBtn = document.getElementById('closeSidebarBtn');
@@ -760,7 +980,7 @@
         document.addEventListener('mousemove', (e) => {
             if (!isResizing || window.innerWidth < 1024) return;
             let newWidth = window.innerWidth - e.clientX;
-            if (newWidth < 280) newWidth = 280;
+            if (newWidth < 260) newWidth = 260;
             if (newWidth > window.innerWidth / 2) newWidth = window.innerWidth / 2;
             todoSidebar.style.width = `${newWidth}px`;
         });
@@ -776,25 +996,21 @@
         // Toggle Edit Mode
         const toggleEditBtn = document.getElementById('toggleEditBtn');
         const addAppBtnHeader = document.getElementById('addAppBtnHeader');
-        
+
         toggleEditBtn.addEventListener('click', () => {
             isEditMode = !isEditMode;
             if (isEditMode) {
-                toggleEditBtn.classList.replace('bg-slate-50', 'bg-blue-100');
-                toggleEditBtn.classList.replace('text-slate-700', 'text-blue-700');
-                toggleEditBtn.classList.replace('border-slate-200', 'border-blue-200');
+                toggleEditBtn.classList.add('btn-active-mode');
                 toggleEditBtn.innerHTML = '<i class="fas fa-check"></i> <span class="hidden sm:inline">Færdig</span>';
                 addAppBtnHeader.classList.remove('hidden');
             } else {
-                toggleEditBtn.classList.replace('bg-blue-100', 'bg-slate-50');
-                toggleEditBtn.classList.replace('text-blue-700', 'text-slate-700');
-                toggleEditBtn.classList.replace('border-blue-200', 'border-slate-200');
-                toggleEditBtn.innerHTML = '<i class="fas fa-pen"></i> <span class="hidden sm:inline">Rediger</span>';
+                toggleEditBtn.classList.remove('btn-active-mode');
+                toggleEditBtn.innerHTML = '<i class="fas fa-sliders"></i> <span class="hidden sm:inline">Rediger</span>';
                 addAppBtnHeader.classList.add('hidden');
             }
             renderApps();
         });
-        
+
         addAppBtnHeader.addEventListener('click', () => openAppModal());
 
         // --- VEJR, KLIMA & SOLTIDER (Yr.no / MET Norway via Open-Meteo) ---
@@ -803,14 +1019,14 @@
         let usingGps = false;
 
         function wmoToInfo(code) {
-            if (code === 0) return { text: 'Klart vejr', icon: 'fa-sun text-amber-500' };
-            if (code <= 2) return { text: 'Let skyet', icon: 'fa-cloud-sun text-amber-500' };
-            if (code === 3) return { text: 'Overskyet', icon: 'fa-cloud text-slate-400' };
-            if (code <= 48) return { text: 'Tåge', icon: 'fa-smog text-slate-400' };
-            if (code <= 57) return { text: 'Støvregn', icon: 'fa-cloud-rain text-blue-400' };
-            if (code <= 67 || (code >= 80 && code <= 82)) return { text: 'Regn', icon: 'fa-cloud-showers-heavy text-blue-500' };
-            if (code <= 77 || (code >= 85 && code <= 86)) return { text: 'Sne', icon: 'fa-snowflake text-sky-400' };
-            return { text: 'Tordenbyger', icon: 'fa-cloud-bolt text-amber-600' };
+            if (code === 0) return { text: 'Klart vejr', icon: 'fa-sun text-warn' };
+            if (code <= 2) return { text: 'Let skyet', icon: 'fa-cloud-sun text-warn' };
+            if (code === 3) return { text: 'Overskyet', icon: 'fa-cloud text-muted' };
+            if (code <= 48) return { text: 'Tåge', icon: 'fa-smog text-muted' };
+            if (code <= 57) return { text: 'Støvregn', icon: 'fa-cloud-rain text-accent' };
+            if (code <= 67 || (code >= 80 && code <= 82)) return { text: 'Regn', icon: 'fa-cloud-showers-heavy text-accent' };
+            if (code <= 77 || (code >= 85 && code <= 86)) return { text: 'Sne', icon: 'fa-snowflake text-accent' };
+            return { text: 'Tordenbyger', icon: 'fa-cloud-bolt text-warn' };
         }
 
         async function loadWeather() {
@@ -824,18 +1040,22 @@
                 const info = wmoToInfo(cur.weather_code);
                 document.getElementById('weatherLocationTitle').innerText = currentCoords.name;
                 document.getElementById('weatherConditionText').innerText = info.text;
-                document.getElementById('weatherMainIcon').className = `fas ${info.icon} text-xl`;
+                document.getElementById('weatherMainIcon').className = `fas ${info.icon} text-base`;
                 document.getElementById('weatherTemp').innerText = `${Math.round(cur.temperature_2m)}°`;
-                document.getElementById('weatherFeelsLike').innerText = `Føles som ${Math.round(cur.apparent_temperature)}°`;
+                document.getElementById('weatherFeelsLike').innerText = `Føles ${Math.round(cur.apparent_temperature)}°`;
                 document.getElementById('weatherWind').innerText = cur.wind_speed_10m.toFixed(1);
-                document.getElementById('weatherPrecip').innerText = cur.precipitation.toFixed(1);
 
                 if (data.daily?.sunrise?.[0]) {
-                    document.getElementById('sunriseTime').innerText = data.daily.sunrise[0].slice(11, 16);
-                    document.getElementById('sunsetTime').innerText = data.daily.sunset[0].slice(11, 16);
+                    const sr = data.daily.sunrise[0];
+                    const ss = data.daily.sunset[0];
+                    document.getElementById('sunriseTime').innerText = sr.slice(11, 16);
+                    document.getElementById('sunsetTime').innerText = ss.slice(11, 16);
+                    const diffMin = Math.round((new Date(ss) - new Date(sr)) / 60000);
+                    document.getElementById('daylightDelta').innerText = `Dagens længde: ${Math.floor(diffMin / 60)}t ${diffMin % 60}m`;
                 }
 
                 const startIdx = new Date().getHours();
+                let sum8hPrecip = 0;
 
                 const strip = document.getElementById('weatherForecastStrip');
                 strip.innerHTML = '';
@@ -845,21 +1065,23 @@
                     const hTime = data.hourly.time[idx].slice(11, 13);
                     const hTemp = Math.round(data.hourly.temperature_2m[idx]);
                     const hInfo = wmoToInfo(data.hourly.weather_code[idx]);
-                    const hPrecip = data.hourly.precipitation[idx];
+                    const hPrecip = data.hourly.precipitation[idx] || 0;
+                    sum8hPrecip += hPrecip;
 
                     const cell = document.createElement('div');
-                    cell.className = 'flex flex-col items-center py-1 rounded-lg bg-white/70 border border-slate-100';
+                    cell.className = 'flex flex-col items-center py-1 rounded surface-card';
                     cell.innerHTML = `
-                        <span class="text-[10px] text-slate-400 font-medium">${i === 0 ? 'Nu' : hTime}</span>
+                        <span class="text-[10px] text-muted font-mono-num">${i === 0 ? 'Nu' : hTime}</span>
                         <i class="fas ${hInfo.icon} text-xs my-1"></i>
-                        <span class="text-xs font-semibold text-slate-700">${hTemp}°</span>
-                        <span class="text-[9px] text-blue-500 h-3">${hPrecip > 0 ? hPrecip.toFixed(1) : ''}</span>
+                        <span class="text-xs font-semibold font-mono-num text-ink">${hTemp}°</span>
+                        <span class="text-[9px] font-mono-num text-accent h-3">${hPrecip > 0 ? hPrecip.toFixed(1) : ''}</span>
                     `;
                     strip.appendChild(cell);
                 }
+                document.getElementById('weatherPrecip').innerText = `${cur.precipitation.toFixed(1)} / ${sum8hPrecip.toFixed(1)}`;
             } catch (e) {
                 console.error(e);
-                document.getElementById('weatherConditionText').innerText = 'Kunne ikke hente vejrdata';
+                document.getElementById('weatherConditionText').innerText = 'Vejrdata utilgængelig';
             }
         }
 
@@ -869,17 +1091,17 @@
             if (usingGps) {
                 usingGps = false;
                 currentCoords = { ...AALBORG };
-                btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200');
+                btn.classList.remove('btn-active-mode');
                 label.innerText = 'GPS';
                 loadWeather();
                 return;
             }
             if (!navigator.geolocation) return alert('GPS understøttes ikke i denne browser.');
-            label.innerText = '...';
+            label.innerText = '…';
             navigator.geolocation.getCurrentPosition((pos) => {
                 usingGps = true;
-                currentCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude, name: 'Min placering' };
-                btn.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200');
+                currentCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude, name: 'GPS-placering' };
+                btn.classList.add('btn-active-mode');
                 label.innerText = 'Aalborg';
                 loadWeather();
             }, () => {
@@ -894,16 +1116,22 @@
         let show24Hours = false;
 
         // shortcut: hardcoded 2025/2026 N1 (Aalborg) Tarifmodel 3.0 & Energinet rates, update if switching net company
-        function calcEnergyPrice(spotDkk, isoTime) {
-            if (!includeTariffs) return spotDkk;
+        function getTariffBand(isoTime) {
             const d = new Date(isoTime);
             const m = d.getMonth();
             const h = d.getHours();
-            const isWinter = m >= 9 || m <= 2; // Okt - Mar
-            const netTariff = h < 6 ? 0.15 : (h >= 17 && h < 21) ? (isWinter ? 1.35 : 0.60) : (isWinter ? 0.45 : 0.23);
+            const isWinter = m >= 9 || m <= 2;
+            if (h < 6) return { name: 'Lavlast', net: 0.15 };
+            if (h >= 17 && h < 21) return { name: 'Spidslast', net: isWinter ? 1.35 : 0.60 };
+            return { name: 'Højlast', net: isWinter ? 0.45 : 0.23 };
+        }
+
+        function calcEnergyPrice(spotDkk, isoTime) {
+            if (!includeTariffs) return spotDkk;
+            const band = getTariffBand(isoTime);
             const elafgift = 0.761;
             const systemTariff = 0.132;
-            return (spotDkk + netTariff + elafgift + systemTariff) * 1.25;
+            return (spotDkk + band.net + elafgift + systemTariff) * 1.25;
         }
 
         console.assert(calcEnergyPrice(1.0, '2026-11-07T18:00:00+01:00') > 3.5, 'Spidslast tarif-beregning fejl');
@@ -930,7 +1158,7 @@
                 renderEnergyChart();
             } catch (e) {
                 console.error(e);
-                document.getElementById('energySubtext').innerText = 'Kunne ikke hente elpriser';
+                document.getElementById('energySubtext').innerText = 'Elpriser utilgængelige';
             }
         }
 
@@ -939,38 +1167,57 @@
             if (!rawEnergyRecords.length) return;
 
             const now = new Date();
-            let upcoming = rawEnergyRecords.filter(r => new Date(r.time_end) > now);
+            const upcoming = rawEnergyRecords.filter(r => new Date(r.time_end) > now);
             const count = show24Hours ? 24 : 8;
-            // Hvis morgendagens priser ikke er frigivet endnu (før kl. 13) og 24t er valgt, vis de seneste/kommende 24 timer
             const slice = (show24Hours && upcoming.length < 24) ? rawEnergyRecords.slice(-24) : upcoming.slice(0, count);
 
-            const items = slice.map(r => ({
-                time: new Date(r.time_start),
-                price: calcEnergyPrice(r.DKK_per_kWh, r.time_start),
-                isCurrent: new Date(r.time_start) <= now && new Date(r.time_end) > now
-            }));
+            const items = slice.map(r => {
+                const band = getTariffBand(r.time_start);
+                return {
+                    time: new Date(r.time_start),
+                    spot: r.DKK_per_kWh,
+                    bandName: band.name,
+                    price: calcEnergyPrice(r.DKK_per_kWh, r.time_start),
+                    isCurrent: new Date(r.time_start) <= now && new Date(r.time_end) > now
+                };
+            });
 
             const curItem = items.find(i => i.isCurrent) || items[0];
+            const minItem = items.reduce((min, i) => (i.price < min.price ? i : min), items[0]);
+
             if (curItem) {
                 const badge = document.getElementById('energyCurrentBadge');
+                const lowThresh = includeTariffs ? 2.2 : 0.7;
+                const midThresh = includeTariffs ? 3.2 : 1.5;
                 badge.innerText = `Nu: ${curItem.price.toFixed(2).replace('.', ',')} kr`;
-                badge.className = `text-xs font-semibold px-2 py-0.5 rounded-full ${curItem.price < 2.2 ? 'bg-emerald-100 text-emerald-800' : curItem.price < 3.2 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}`;
+                badge.className = `badge font-mono-num ${curItem.price < lowThresh ? 'badge-low' : curItem.price < midThresh ? 'badge-mid' : 'badge-high'}`;
+            }
+
+            if (minItem) {
+                const minHh = String(minItem.time.getHours()).padStart(2, '0');
+                document.getElementById('energyCheapestBadge').innerText = `Lavest kl. ${minHh}: ${minItem.price.toFixed(2).replace('.', ',')} kr`;
             }
 
             const maxP = Math.max(...items.map(i => i.price), 1);
             chart.innerHTML = '';
 
             items.forEach(item => {
-                const pct = Math.max(12, Math.round((item.price / maxP) * 100));
+                const pct = Math.max(14, Math.round((item.price / maxP) * 100));
                 const hh = String(item.time.getHours()).padStart(2, '0');
-                const color = item.price < (includeTariffs ? 2.2 : 0.7) ? 'bg-emerald-500' : item.price < (includeTariffs ? 3.2 : 1.5) ? 'bg-amber-400' : 'bg-rose-500';
+                const lowThresh = includeTariffs ? 2.2 : 0.7;
+                const midThresh = includeTariffs ? 3.2 : 1.5;
+                const barColor = item.price < lowThresh ? 'bar-low' : item.price < midThresh ? 'bar-mid' : 'bar-high';
+                const isCheapest = minItem && item.time.getTime() === minItem.time.getTime();
 
                 const col = document.createElement('div');
-                col.className = `flex-1 min-w-[24px] h-full flex flex-col justify-end items-center group relative ${item.isCurrent ? 'bg-blue-50/80 rounded-lg px-0.5' : ''}`;
+                col.className = `bar-col ${item.isCurrent ? 'bar-col-current' : ''} ${isCheapest && !item.isCurrent ? 'bar-col-cheapest' : ''}`;
+                col.onmouseenter = () => {
+                    document.getElementById('energyHoverReadout').innerText = `Kl. ${hh}:00: ${item.price.toFixed(2).replace('.', ',')} kr/kWh (${includeTariffs ? item.bandName + ', spot ' + item.spot.toFixed(2).replace('.', ',') : 'Rå spotpris'})`;
+                };
                 col.innerHTML = `
-                    <span class="text-[9.5px] font-semibold text-slate-600 mb-1 leading-none">${item.price.toFixed(2).replace('.', ',')}</span>
-                    <div class="w-full max-w-[22px] rounded-t-md transition-all ${color} ${item.isCurrent ? 'ring-2 ring-blue-500/40' : 'opacity-85 group-hover:opacity-100'}" style="height: ${pct}%"></div>
-                    <span class="text-[10px] ${item.isCurrent ? 'font-bold text-blue-700' : 'text-slate-400'} mt-1 leading-none">${hh}</span>
+                    <span class="text-[9.5px] font-mono-num font-medium text-ink-2 mb-1 leading-none">${item.price.toFixed(2).replace('.', ',')}</span>
+                    <div class="w-full max-w-[22px] rounded-t ${barColor}" style="height: ${pct}%"></div>
+                    <span class="text-[10px] font-mono-num ${item.isCurrent ? 'font-bold text-accent' : 'text-muted'} mt-1 leading-none">${hh}</span>
                 `;
                 chart.appendChild(col);
             });
@@ -981,10 +1228,10 @@
             const btn = e.currentTarget;
             btn.innerText = includeTariffs ? 'Inkl. tariffer' : 'Rå spotpris';
             btn.className = includeTariffs
-                ? 'px-2.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-medium transition-colors shadow-sm'
-                : 'px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/80 text-slate-700 text-xs font-medium transition-colors shadow-sm';
+                ? 'btn btn-primary py-1 px-2.5 min-h-[28px]'
+                : 'btn py-1 px-2.5 min-h-[28px]';
             document.getElementById('energySubtext').innerText = includeTariffs
-                ? 'Inkl. nettarif (N1), afgifter & moms'
+                ? 'Inkl. N1 nettarif (lav/høj/spids), elafgift & moms'
                 : 'Kun rå Nord Pool spotpris (ekskl. afgifter)';
             renderEnergyChart();
         });

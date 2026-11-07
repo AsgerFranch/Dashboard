@@ -1,0 +1,26 @@
+[
+ {
+  "mode": "redesign",
+  "depth": "full",
+  "scope": "app",
+  "shape": "app screen",
+  "theme": "custom",
+  "axes": "light/slab-serif/cool",
+  "hero": "none",
+  "nav": "top-utility-bar",
+  "footer": "none",
+  "imagery": "none",
+  "photos": [],
+  "entry": "index.html",
+  "fingerprint": "aalborg-instrument-desk",
+  "sections": [
+   "telemetry",
+   "launcher",
+   "todos"
+  ],
+  "signature": "dual live telemetry strip (Yr.no + DK1 tariff planner)",
+  "waived": [],
+  "prompt": "Custom high functionality and practical UI dashboard",
+  "date": "2026-11-07"
+ }
+]
