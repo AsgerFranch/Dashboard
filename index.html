@@ -112,7 +112,7 @@
         <main class="flex-1 overflow-y-auto flex flex-col py-6 px-4 sm:py-10 sm:px-8 lg:px-12 relative w-full transition-all">
             
             <!-- Header -->
-            <header class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4 pb-4 border-b border-slate-100">
+            <header class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-6 gap-4 pb-4 border-b border-slate-100">
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Oversigt</h1>
                     <p class="text-sm text-slate-500 mt-1 flex items-center gap-2">
@@ -123,7 +123,7 @@
                 
                 <div class="flex flex-wrap gap-2 sm:gap-3">
                     <button id="addAppBtnHeader" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-blue-600 text-white font-medium text-xs sm:text-sm hover:bg-blue-700 transition-colors shadow-sm shadow-blue-600/20 flex items-center gap-2 hidden">
-                        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tilføj Ement</span>
+                        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tilføj Element</span>
                     </button>
                     <button id="toggleEditBtn" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs sm:text-sm hover:bg-slate-100 transition-colors flex items-center gap-2">
                         <i class="fas fa-pen"></i> <span class="hidden sm:inline">Rediger</span>
@@ -138,8 +138,78 @@
                 </div>
             </header>
 
-            <!-- App List (Opdateret til at matche referencen) -->
-            <div id="appGrid" class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-y-2 gap-x-6 pb-20">
+            <!-- Live Widgets: Vejr/Sol (Yr.no) & Elpriser (DK1) -->
+            <section class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
+                <!-- Vejr & Sol Widget -->
+                <div class="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <div class="flex items-center gap-2">
+                            <i id="weatherMainIcon" class="fas fa-cloud-sun text-blue-600 text-xl"></i>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <h2 id="weatherLocationTitle" class="text-sm font-bold text-slate-800">Aalborg</h2>
+                                    <span class="text-[11px] px-1.5 py-0.5 rounded bg-slate-200/70 text-slate-600 font-medium">Yr.no</span>
+                                </div>
+                                <p id="weatherConditionText" class="text-xs text-slate-500">Henter vejrdata...</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2.5 bg-white px-2.5 py-1.5 rounded-xl border border-slate-200/80 text-xs text-slate-600 shadow-sm" title="Solopgang og solnedgang">
+                                <span class="flex items-center gap-1"><i class="fas fa-sun text-amber-500"></i> <span id="sunriseTime">--:--</span></span>
+                                <span class="text-slate-300">|</span>
+                                <span class="flex items-center gap-1"><i class="fas fa-moon text-indigo-500"></i> <span id="sunsetTime">--:--</span></span>
+                            </div>
+                            <button id="gpsBtn" class="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/80 text-slate-600 hover:text-blue-600 hover:border-blue-200 text-xs font-medium flex items-center gap-1 shadow-sm transition-colors" title="Brug GPS-placering">
+                                <i class="fas fa-location-crosshairs"></i> <span class="hidden sm:inline" id="gpsBtnLabel">GPS</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-baseline justify-between gap-4 my-1">
+                        <div class="flex items-baseline gap-2">
+                            <span id="weatherTemp" class="text-3xl font-bold text-slate-900">--°</span>
+                            <span id="weatherFeelsLike" class="text-xs text-slate-500">Føles som --°</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs text-slate-600">
+                            <span title="Vind"><i class="fas fa-wind text-slate-400 mr-1"></i><span id="weatherWind">--</span> m/s</span>
+                            <span title="Nedbør"><i class="fas fa-droplet text-blue-400 mr-1"></i><span id="weatherPrecip">--</span> mm</span>
+                        </div>
+                    </div>
+
+                    <div id="weatherForecastStrip" class="grid grid-cols-8 gap-1 mt-3 pt-3 border-t border-slate-200/60 text-center">
+                        <!-- 8 timers vejrudsigt genereres her -->
+                    </div>
+                </div>
+
+                <!-- Elpriser Widget -->
+                <div class="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-bolt text-amber-500 text-lg"></i>
+                                <h2 class="text-sm font-bold text-slate-800">Elpriser (DK1)</h2>
+                                <span id="energyCurrentBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">-- kr/kWh</span>
+                            </div>
+                            <p id="energySubtext" class="text-xs text-slate-500 mt-0.5">Inkl. nettarif (N1), afgifter & moms</p>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button id="tariffToggleBtn" class="px-2.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-medium transition-colors shadow-sm" title="Skift mellem fuld pris inkl. tariffer og rå spotpris">
+                                Inkl. tariffer
+                            </button>
+                            <button id="hoursToggleBtn" class="px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/80 text-slate-700 hover:bg-slate-100 text-xs font-medium transition-colors shadow-sm">
+                                Vis 24t
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="energyChart" class="flex items-end gap-1 h-28 pt-5 pb-1 mt-1 select-none overflow-x-auto">
+                        <!-- 8 eller 24 timers søjler genereres her -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- App List (Kompakt & omrokerbar) -->
+            <div id="appGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2.5 pb-20">
                 <!-- Dynamisk indhold -->
             </div>
         </main>
@@ -382,6 +452,17 @@
             catch (error) { console.error(error); }
         }
 
+        let draggedAppIndex = null;
+
+        window.moveApp = (index, direction) => {
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= apps.length) return;
+            const [moved] = apps.splice(index, 1);
+            apps.splice(targetIndex, 0, moved);
+            renderApps();
+            saveAppsToFirestore();
+        };
+
         function renderApps() {
             appGrid.innerHTML = '';
             
@@ -390,29 +471,51 @@
                 const hasImage = app.imageUrl && app.imageUrl.trim() !== '';
                 const theme = themes[index % themes.length];
                 
-                // Opdateret design: Ren liste (flex-row), matchende referencen
-                card.className = `group relative flex items-center p-3 rounded-2xl transition-colors duration-200 ${isEditMode ? 'bg-slate-50' : 'hover:bg-slate-50 cursor-pointer'}`;
+                card.className = `group relative flex items-center p-2.5 rounded-xl border border-slate-100 transition-all duration-150 ${isEditMode ? 'bg-slate-50 cursor-grab active:cursor-grabbing' : 'bg-white hover:bg-slate-50 hover:border-slate-200 cursor-pointer shadow-sm'}`;
+                card.draggable = true;
+
+                card.ondragstart = (e) => {
+                    draggedAppIndex = index;
+                    card.classList.add('opacity-50');
+                    e.dataTransfer.effectAllowed = 'move';
+                };
+                card.ondragend = () => {
+                    card.classList.remove('opacity-50');
+                    draggedAppIndex = null;
+                };
+                card.ondragover = (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                };
+                card.ondrop = (e) => {
+                    e.preventDefault();
+                    if (draggedAppIndex === null || draggedAppIndex === index) return;
+                    const [moved] = apps.splice(draggedAppIndex, 1);
+                    apps.splice(index, 0, moved);
+                    draggedAppIndex = null;
+                    renderApps();
+                    saveAppsToFirestore();
+                };
                 
                 let iconHtml = '';
                 if (hasImage) {
                     iconHtml = `<img src="${app.imageUrl}" class="absolute inset-0 w-full h-full object-cover z-10">`;
                 } else {
-                    // Generer det flotte "squircle" reference ikon
                     iconHtml = `
                         <div class="icon-overlay-circle"></div>
                         <div class="icon-overlay-wave"></div>
-                        <i class="${app.icon || 'fas fa-chart-line'} ${theme.iconColor} text-2xl relative z-10"></i>
+                        <i class="${app.icon || 'fas fa-chart-line'} ${theme.iconColor} text-lg relative z-10"></i>
                     `;
                 }
 
                 card.innerHTML = `
-                    <div class="flex-shrink-0 w-[60px] h-[60px] rounded-[1.1rem] overflow-hidden relative mr-4 flex items-center justify-center shadow-sm" style="background-color: ${hasImage ? '#f8fafc' : theme.bg};">
+                    <div class="flex-shrink-0 w-11 h-11 rounded-xl overflow-hidden relative mr-3 flex items-center justify-center shadow-sm" style="background-color: ${hasImage ? '#f8fafc' : theme.bg};">
                         ${iconHtml}
                     </div>
                     
-                    <div class="flex-1 min-w-0 flex flex-col justify-center ${isEditMode ? 'pr-20' : 'pr-2'}">
-                        <h3 class="font-[600] text-[17px] text-[#1a1a1a] mb-0.5 truncate tracking-tight">${app.title}</h3>
-                        <p class="text-[14.5px] text-[#5e5e5e] truncate">${app.description || app.url || 'Ingen beskrivelse'}</p>
+                    <div class="flex-1 min-w-0 flex flex-col justify-center ${isEditMode ? 'pr-28' : 'pr-1'}">
+                        <h3 class="font-semibold text-[15px] text-slate-900 leading-tight truncate">${app.title}</h3>
+                        <p class="text-[12.5px] text-slate-500 truncate mt-0.5">${app.description || app.url || 'Ingen beskrivelse'}</p>
                     </div>
                 `;
 
@@ -420,13 +523,19 @@
                     card.onclick = () => { if(app.url && app.url !== '#') window.open(app.url, '_blank'); };
                 } else {
                     const controls = document.createElement('div');
-                    controls.className = 'absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-2 z-20';
+                    controls.className = 'absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1 z-20';
                     controls.innerHTML = `
-                        <button class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center shadow-sm transition-colors" onclick="event.stopPropagation(); window.openEditModal('${app.id}')">
-                            <i class="fas fa-pen text-xs"></i>
+                        <button class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-30 flex items-center justify-center shadow-sm" ${index === 0 ? 'disabled' : ''} title="Flyt op/venstre" onclick="event.stopPropagation(); window.moveApp(${index}, -1)">
+                            <i class="fas fa-chevron-left text-[10px]"></i>
                         </button>
-                        <button class="w-8 h-8 rounded-full bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 flex items-center justify-center shadow-sm transition-colors" onclick="event.stopPropagation(); window.deleteApp('${app.id}')">
-                            <i class="fas fa-trash text-xs"></i>
+                        <button class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-30 flex items-center justify-center shadow-sm" ${index === apps.length - 1 ? 'disabled' : ''} title="Flyt ned/højre" onclick="event.stopPropagation(); window.moveApp(${index}, 1)">
+                            <i class="fas fa-chevron-right text-[10px]"></i>
+                        </button>
+                        <button class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center shadow-sm" title="Rediger" onclick="event.stopPropagation(); window.openEditModal('${app.id}')">
+                            <i class="fas fa-pen text-[10px]"></i>
+                        </button>
+                        <button class="w-7 h-7 rounded-lg bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 flex items-center justify-center shadow-sm" title="Slet" onclick="event.stopPropagation(); window.deleteApp('${app.id}')">
+                            <i class="fas fa-trash text-[10px]"></i>
                         </button>
                     `;
                     card.appendChild(controls);
@@ -437,14 +546,14 @@
 
             if (isEditMode) {
                 const addCard = document.createElement('div');
-                addCard.className = 'relative flex items-center p-3 rounded-2xl transition-colors duration-200 hover:bg-blue-50/50 cursor-pointer border-2 border-dashed border-slate-200 mt-2';
+                addCard.className = 'relative flex items-center p-2.5 rounded-xl transition-colors duration-200 hover:bg-blue-50/50 cursor-pointer border-2 border-dashed border-slate-200';
                 addCard.onclick = () => openAppModal();
                 addCard.innerHTML = `
-                    <div class="flex-shrink-0 w-[60px] h-[60px] rounded-[1.1rem] bg-slate-50 border border-slate-200 flex items-center justify-center mr-4 text-slate-400">
-                        <i class="fas fa-plus text-xl"></i>
+                    <div class="flex-shrink-0 w-11 h-11 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center mr-3 text-slate-400">
+                        <i class="fas fa-plus text-base"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <h3 class="text-[16px] font-[500] text-slate-700">Tilføj nyt element</h3>
+                        <h3 class="text-[14px] font-medium text-slate-700">Tilføj nyt element</h3>
                     </div>
                 `;
                 appGrid.appendChild(addCard);
@@ -687,6 +796,208 @@
         });
         
         addAppBtnHeader.addEventListener('click', () => openAppModal());
+
+        // --- VEJR, KLIMA & SOLTIDER (Yr.no / MET Norway via Open-Meteo) ---
+        const AALBORG = { lat: 57.0488, lon: 9.9217, name: 'Aalborg' };
+        let currentCoords = { ...AALBORG };
+        let usingGps = false;
+
+        function wmoToInfo(code) {
+            if (code === 0) return { text: 'Klart vejr', icon: 'fa-sun text-amber-500' };
+            if (code <= 2) return { text: 'Let skyet', icon: 'fa-cloud-sun text-amber-500' };
+            if (code === 3) return { text: 'Overskyet', icon: 'fa-cloud text-slate-400' };
+            if (code <= 48) return { text: 'Tåge', icon: 'fa-smog text-slate-400' };
+            if (code <= 57) return { text: 'Støvregn', icon: 'fa-cloud-rain text-blue-400' };
+            if (code <= 67 || (code >= 80 && code <= 82)) return { text: 'Regn', icon: 'fa-cloud-showers-heavy text-blue-500' };
+            if (code <= 77 || (code >= 85 && code <= 86)) return { text: 'Sne', icon: 'fa-snowflake text-sky-400' };
+            return { text: 'Tordenbyger', icon: 'fa-cloud-bolt text-amber-600' };
+        }
+
+        async function loadWeather() {
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${currentCoords.lat}&longitude=${currentCoords.lon}&models=metno_seamless&current=temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation,weather_code&daily=sunrise,sunset&wind_speed_unit=ms&timezone=Europe%2FCopenhagen&forecast_days=2`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Vejrkald fejlede');
+                const data = await res.json();
+
+                const cur = data.current;
+                const info = wmoToInfo(cur.weather_code);
+                document.getElementById('weatherLocationTitle').innerText = currentCoords.name;
+                document.getElementById('weatherConditionText').innerText = info.text;
+                document.getElementById('weatherMainIcon').className = `fas ${info.icon} text-xl`;
+                document.getElementById('weatherTemp').innerText = `${Math.round(cur.temperature_2m)}°`;
+                document.getElementById('weatherFeelsLike').innerText = `Føles som ${Math.round(cur.apparent_temperature)}°`;
+                document.getElementById('weatherWind').innerText = cur.wind_speed_10m.toFixed(1);
+                document.getElementById('weatherPrecip').innerText = cur.precipitation.toFixed(1);
+
+                if (data.daily?.sunrise?.[0]) {
+                    document.getElementById('sunriseTime').innerText = data.daily.sunrise[0].slice(11, 16);
+                    document.getElementById('sunsetTime').innerText = data.daily.sunset[0].slice(11, 16);
+                }
+
+                const startIdx = new Date().getHours();
+
+                const strip = document.getElementById('weatherForecastStrip');
+                strip.innerHTML = '';
+                for (let i = 0; i < 8; i++) {
+                    const idx = startIdx + i;
+                    if (idx >= data.hourly.time.length) break;
+                    const hTime = data.hourly.time[idx].slice(11, 13);
+                    const hTemp = Math.round(data.hourly.temperature_2m[idx]);
+                    const hInfo = wmoToInfo(data.hourly.weather_code[idx]);
+                    const hPrecip = data.hourly.precipitation[idx];
+
+                    const cell = document.createElement('div');
+                    cell.className = 'flex flex-col items-center py-1 rounded-lg bg-white/70 border border-slate-100';
+                    cell.innerHTML = `
+                        <span class="text-[10px] text-slate-400 font-medium">${i === 0 ? 'Nu' : hTime}</span>
+                        <i class="fas ${hInfo.icon} text-xs my-1"></i>
+                        <span class="text-xs font-semibold text-slate-700">${hTemp}°</span>
+                        <span class="text-[9px] text-blue-500 h-3">${hPrecip > 0 ? hPrecip.toFixed(1) : ''}</span>
+                    `;
+                    strip.appendChild(cell);
+                }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('weatherConditionText').innerText = 'Kunne ikke hente vejrdata';
+            }
+        }
+
+        document.getElementById('gpsBtn').addEventListener('click', () => {
+            const btn = document.getElementById('gpsBtn');
+            const label = document.getElementById('gpsBtnLabel');
+            if (usingGps) {
+                usingGps = false;
+                currentCoords = { ...AALBORG };
+                btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200');
+                label.innerText = 'GPS';
+                loadWeather();
+                return;
+            }
+            if (!navigator.geolocation) return alert('GPS understøttes ikke i denne browser.');
+            label.innerText = '...';
+            navigator.geolocation.getCurrentPosition((pos) => {
+                usingGps = true;
+                currentCoords = { lat: pos.coords.latitude, lon: pos.coords.longitude, name: 'Min placering' };
+                btn.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200');
+                label.innerText = 'Aalborg';
+                loadWeather();
+            }, () => {
+                label.innerText = 'GPS';
+                alert('Kunne ikke hente GPS-placering.');
+            }, { timeout: 8000 });
+        });
+
+        // --- ELPRISER (DK1 Spot + Tarifmodel 3.0 N1/Energinet + Afgifter + Moms) ---
+        let rawEnergyRecords = [];
+        let includeTariffs = true;
+        let show24Hours = false;
+
+        // shortcut: hardcoded 2025/2026 N1 (Aalborg) Tarifmodel 3.0 & Energinet rates, update if switching net company
+        function calcEnergyPrice(spotDkk, isoTime) {
+            if (!includeTariffs) return spotDkk;
+            const d = new Date(isoTime);
+            const m = d.getMonth();
+            const h = d.getHours();
+            const isWinter = m >= 9 || m <= 2; // Okt - Mar
+            const netTariff = h < 6 ? 0.15 : (h >= 17 && h < 21) ? (isWinter ? 1.35 : 0.60) : (isWinter ? 0.45 : 0.23);
+            const elafgift = 0.761;
+            const systemTariff = 0.132;
+            return (spotDkk + netTariff + elafgift + systemTariff) * 1.25;
+        }
+
+        console.assert(calcEnergyPrice(1.0, '2026-11-07T18:00:00+01:00') > 3.5, 'Spidslast tarif-beregning fejl');
+
+        function formatDatePath(d) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}/${mm}-${dd}`;
+        }
+
+        async function loadEnergyPrices() {
+            try {
+                const now = new Date();
+                const tomorrow = new Date(now.getTime() + 86400000);
+                const [resToday, resTomorrow] = await Promise.all([
+                    fetch(`https://www.elprisenligenu.dk/api/v1/prices/${formatDatePath(now)}_DK1.json`),
+                    fetch(`https://www.elprisenligenu.dk/api/v1/prices/${formatDatePath(tomorrow)}_DK1.json`).catch(() => ({ ok: false }))
+                ]);
+
+                const todayData = resToday.ok ? await resToday.json() : [];
+                const tomorrowData = resTomorrow.ok ? await resTomorrow.json() : [];
+                rawEnergyRecords = [...todayData, ...tomorrowData];
+                renderEnergyChart();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('energySubtext').innerText = 'Kunne ikke hente elpriser';
+            }
+        }
+
+        function renderEnergyChart() {
+            const chart = document.getElementById('energyChart');
+            if (!rawEnergyRecords.length) return;
+
+            const now = new Date();
+            let upcoming = rawEnergyRecords.filter(r => new Date(r.time_end) > now);
+            const count = show24Hours ? 24 : 8;
+            // Hvis morgendagens priser ikke er frigivet endnu (før kl. 13) og 24t er valgt, vis de seneste/kommende 24 timer
+            const slice = (show24Hours && upcoming.length < 24) ? rawEnergyRecords.slice(-24) : upcoming.slice(0, count);
+
+            const items = slice.map(r => ({
+                time: new Date(r.time_start),
+                price: calcEnergyPrice(r.DKK_per_kWh, r.time_start),
+                isCurrent: new Date(r.time_start) <= now && new Date(r.time_end) > now
+            }));
+
+            const curItem = items.find(i => i.isCurrent) || items[0];
+            if (curItem) {
+                const badge = document.getElementById('energyCurrentBadge');
+                badge.innerText = `Nu: ${curItem.price.toFixed(2).replace('.', ',')} kr`;
+                badge.className = `text-xs font-semibold px-2 py-0.5 rounded-full ${curItem.price < 2.2 ? 'bg-emerald-100 text-emerald-800' : curItem.price < 3.2 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}`;
+            }
+
+            const maxP = Math.max(...items.map(i => i.price), 1);
+            chart.innerHTML = '';
+
+            items.forEach(item => {
+                const pct = Math.max(12, Math.round((item.price / maxP) * 100));
+                const hh = String(item.time.getHours()).padStart(2, '0');
+                const color = item.price < (includeTariffs ? 2.2 : 0.7) ? 'bg-emerald-500' : item.price < (includeTariffs ? 3.2 : 1.5) ? 'bg-amber-400' : 'bg-rose-500';
+
+                const col = document.createElement('div');
+                col.className = `flex-1 min-w-[24px] h-full flex flex-col justify-end items-center group relative ${item.isCurrent ? 'bg-blue-50/80 rounded-lg px-0.5' : ''}`;
+                col.innerHTML = `
+                    <span class="text-[9.5px] font-semibold text-slate-600 mb-1 leading-none">${item.price.toFixed(2).replace('.', ',')}</span>
+                    <div class="w-full max-w-[22px] rounded-t-md transition-all ${color} ${item.isCurrent ? 'ring-2 ring-blue-500/40' : 'opacity-85 group-hover:opacity-100'}" style="height: ${pct}%"></div>
+                    <span class="text-[10px] ${item.isCurrent ? 'font-bold text-blue-700' : 'text-slate-400'} mt-1 leading-none">${hh}</span>
+                `;
+                chart.appendChild(col);
+            });
+        }
+
+        document.getElementById('tariffToggleBtn').addEventListener('click', (e) => {
+            includeTariffs = !includeTariffs;
+            const btn = e.currentTarget;
+            btn.innerText = includeTariffs ? 'Inkl. tariffer' : 'Rå spotpris';
+            btn.className = includeTariffs
+                ? 'px-2.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-medium transition-colors shadow-sm'
+                : 'px-2.5 py-1.5 rounded-xl bg-white border border-slate-200/80 text-slate-700 text-xs font-medium transition-colors shadow-sm';
+            document.getElementById('energySubtext').innerText = includeTariffs
+                ? 'Inkl. nettarif (N1), afgifter & moms'
+                : 'Kun rå Nord Pool spotpris (ekskl. afgifter)';
+            renderEnergyChart();
+        });
+
+        document.getElementById('hoursToggleBtn').addEventListener('click', (e) => {
+            show24Hours = !show24Hours;
+            e.currentTarget.innerText = show24Hours ? 'Vis 8t' : 'Vis 24t';
+            renderEnergyChart();
+        });
+
+        loadWeather();
+        loadEnergyPrices();
+        setInterval(() => { loadWeather(); loadEnergyPrices(); }, 15 * 60 * 1000);
 
     </script>
 </body>
