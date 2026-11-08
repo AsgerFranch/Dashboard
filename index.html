@@ -174,13 +174,13 @@
         .bar-high { background-color: var(--color-error); }
         .bar-col {
             flex: 1 1 0%;
-            min-width: 24px;
+            min-width: 20px;
             height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             align-items: center;
-            padding: var(--space-3xs);
+            padding: 1px;
             border-radius: 4px;
             cursor: pointer;
             transition: background-color var(--dur-micro) var(--ease-out);
@@ -328,21 +328,21 @@
                 </div>
             </header>
 
-            <!-- Live Telemetry Row: Yr.no Weather/Sun + DK1 Energy Planner -->
-            <section class="grid grid-cols-1 xl:grid-cols-12 gap-3 mb-5">
+            <!-- Live Telemetry Row: Yr.no Weather/Sun + Live Indeklima + DK1 Energy Planner -->
+            <section class="grid grid-cols-1 md:grid-cols-12 gap-2.5 mb-4">
 
                 <!-- 1. Vejr, Klima & Soltider (Yr.no / Aalborg + GPS) -->
-                <div class="xl:col-span-5 surface-panel p-3.5 flex flex-col justify-between">
+                <div class="md:col-span-6 xl:col-span-4 surface-panel p-3 flex flex-col justify-between">
                     <div>
-                        <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 rule-b">
-                            <div class="flex items-center gap-2">
-                                <i id="weatherMainIcon" class="fas fa-cloud-sun text-accent text-base"></i>
-                                <h2 id="weatherLocationTitle" class="text-sm font-semibold text-ink">Aalborg</h2>
+                        <div class="flex flex-wrap items-center justify-between gap-1.5 pb-2 rule-b">
+                            <div class="flex items-center gap-1.5 min-w-0">
+                                <i id="weatherMainIcon" class="fas fa-cloud-sun text-accent text-sm shrink-0"></i>
+                                <h2 id="weatherLocationTitle" class="text-sm font-semibold text-ink truncate">Aalborg</h2>
                                 <span class="badge font-mono-num">Yr.no</span>
-                                <span id="weatherConditionText" class="text-xs text-muted">Henter vejrdata…</span>
+                                <span id="weatherConditionText" class="text-xs text-muted truncate">Henter…</span>
                             </div>
 
-                            <div class="flex items-center gap-1.5">
+                            <div class="flex items-center gap-1">
                                 <div class="badge font-mono-num" title="Solopgang og solnedgang i dag">
                                     <i class="fas fa-sun text-warn"></i>
                                     <span id="sunriseTime">--:--</span>
@@ -350,7 +350,7 @@
                                     <i class="fas fa-moon text-accent"></i>
                                     <span id="sunsetTime">--:--</span>
                                 </div>
-                                <button id="gpsBtn" class="btn py-1 px-2 min-h-[28px]" title="Skift mellem Aalborg og aktuel GPS-placering">
+                                <button id="gpsBtn" class="btn py-0.5 px-2 min-h-[26px]" title="Skift mellem Aalborg og aktuel GPS-placering">
                                     <i class="fas fa-location-crosshairs"></i>
                                     <span id="gpsBtnLabel">GPS</span>
                                 </button>
@@ -358,60 +358,132 @@
                         </div>
 
                         <!-- Primary Weather Readout -->
-                        <div class="grid grid-cols-3 gap-2 py-2.5 items-center">
-                            <div>
-                                <div class="flex items-baseline gap-1.5">
-                                    <span id="weatherTemp" class="text-2xl sm:text-3xl font-bold font-mono-num text-ink">--°</span>
-                                    <span id="weatherFeelsLike" class="text-xs text-muted">Føles --°</span>
+                        <div class="grid grid-cols-3 gap-1.5 py-2 items-center">
+                            <div class="min-w-0">
+                                <div class="flex items-baseline gap-1">
+                                    <span id="weatherTemp" class="text-xl sm:text-2xl font-bold font-mono-num text-ink">--°</span>
+                                    <span id="weatherFeelsLike" class="text-[11px] text-muted truncate">Føles --°</span>
                                 </div>
-                                <p id="daylightDelta" class="text-xs text-muted font-mono-num mt-0.5">Dagens længde: --t --m</p>
+                                <p id="daylightDelta" class="text-[11px] text-muted font-mono-num mt-0.5 truncate">Dag: --t --m</p>
                             </div>
-                            <div class="surface-card px-2.5 py-1.5">
-                                <p class="text-xs text-muted">Vind</p>
-                                <p class="text-sm font-semibold font-mono-num text-ink"><span id="weatherWind">--</span> m/s</p>
+                            <div class="surface-card px-2 py-1">
+                                <p class="text-[11px] text-muted">Vind</p>
+                                <p class="text-xs sm:text-sm font-semibold font-mono-num text-ink"><span id="weatherWind">--</span> m/s</p>
                             </div>
-                            <div class="surface-card px-2.5 py-1.5">
-                                <p class="text-xs text-muted">Nedbør (nu / 8t)</p>
-                                <p class="text-sm font-semibold font-mono-num text-ink"><span id="weatherPrecip">--</span> mm</p>
+                            <div class="surface-card px-2 py-1">
+                                <p class="text-[11px] text-muted truncate">Nedbør (nu/8t)</p>
+                                <p class="text-xs sm:text-sm font-semibold font-mono-num text-ink"><span id="weatherPrecip">--</span> mm</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- 8-Hour Forecast Strip -->
-                    <div id="weatherForecastStrip" class="grid grid-cols-8 gap-1 pt-2 rule-t text-center">
+                    <div id="weatherForecastStrip" class="grid grid-cols-8 gap-1 pt-1.5 rule-t text-center">
                         <!-- 8 timers Yr.no prognose -->
                     </div>
                 </div>
 
-                <!-- 2. Elpriser & Tarifplanlægger (DK1 / 8t -> 24t) -->
-                <div class="xl:col-span-7 surface-panel p-3.5 flex flex-col justify-between">
+                <!-- 2. Indeklima Live (Firebase RTDB: CO2, Temperatur, Luftfugtighed & Trends) -->
+                <div class="md:col-span-6 xl:col-span-4 surface-panel p-3 flex flex-col justify-between">
                     <div>
-                        <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 rule-b">
-                            <div class="flex items-center flex-wrap gap-2">
+                        <div class="flex flex-wrap items-center justify-between gap-1.5 pb-2 rule-b">
+                            <div class="flex items-center gap-1.5">
+                                <i class="fas fa-temperature-half text-accent text-sm"></i>
+                                <h2 class="text-sm font-semibold text-ink">Indeklima</h2>
+                                <span id="indoorStatusBadge" class="badge font-mono-num">Forbinder…</span>
+                            </div>
+
+                            <div class="flex items-center gap-1">
+                                <span id="indoorTimeBadge" class="badge font-mono-num" title="Tidspunkt for seneste sensormåling">
+                                    <i class="fas fa-clock text-muted"></i>
+                                    <span id="indoorUpdatedTime">--:--</span>
+                                </span>
+                                <a href="https://asgerfranch.github.io/Indeklima-centralen/" target="_blank" rel="noopener" class="btn py-0.5 px-2 min-h-[26px]" title="Åbn Indeklima-centralen med fulde historiske grafer">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span class="hidden sm:inline">Grafer</span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- 3 Live Sensor Readouts with Trend Arrows -->
+                        <div class="grid grid-cols-3 gap-1.5 py-2">
+                            <!-- CO2 -->
+                            <div class="surface-card px-2 py-1.5 flex flex-col justify-between min-w-0">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="text-[11px] text-muted font-medium">CO₂</span>
+                                    <span id="indoorCo2Trend" class="text-[10px] font-mono-num font-semibold text-muted" title="Udvikling de seneste ~15 min">→</span>
+                                </div>
+                                <div class="flex items-baseline gap-0.5 my-0.5">
+                                    <span id="indoorCo2Val" class="text-base sm:text-lg font-bold font-mono-num text-ink">--</span>
+                                    <span class="text-[10px] text-muted font-mono-num">ppm</span>
+                                </div>
+                                <p id="indoorCo2Sub" class="text-[10px] text-muted font-mono-num truncate">Max 1000 ppm</p>
+                            </div>
+
+                            <!-- Temperatur (Inde) -->
+                            <div class="surface-card px-2 py-1.5 flex flex-col justify-between min-w-0">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="text-[11px] text-muted font-medium">Temp</span>
+                                    <span id="indoorTempTrend" class="text-[10px] font-mono-num font-semibold text-muted" title="Udvikling de seneste ~15 min">→</span>
+                                </div>
+                                <div class="flex items-baseline gap-0.5 my-0.5">
+                                    <span id="indoorTempVal" class="text-base sm:text-lg font-bold font-mono-num text-ink">--</span>
+                                    <span class="text-xs text-muted font-mono-num">°C</span>
+                                </div>
+                                <p id="indoorTempSub" class="text-[10px] text-muted font-mono-num truncate">Ude: --°C</p>
+                            </div>
+
+                            <!-- Luftfugtighed (Inde) -->
+                            <div class="surface-card px-2 py-1.5 flex flex-col justify-between min-w-0">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="text-[11px] text-muted font-medium">Fugt</span>
+                                    <span id="indoorHumTrend" class="text-[10px] font-mono-num font-semibold text-muted" title="Udvikling de seneste ~15 min">→</span>
+                                </div>
+                                <div class="flex items-baseline gap-0.5 my-0.5">
+                                    <span id="indoorHumVal" class="text-base sm:text-lg font-bold font-mono-num text-ink">--</span>
+                                    <span class="text-xs text-muted font-mono-num">%</span>
+                                </div>
+                                <p class="text-[10px] text-muted font-mono-num truncate" title="Anbefalet luftfugtighed baseret på udetemperaturen">Anb: <span id="indoorRecHum" class="text-ink-2 font-medium">--%</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Indoor Footer: Outdoor Humidity Advice & Trend Window -->
+                    <div class="flex items-center justify-between gap-2 pt-1.5 rule-t text-[11px] text-muted">
+                        <p id="indoorAdviceText" class="truncate">Henter live sensordata…</p>
+                        <span id="indoorTrendWindow" class="font-mono-num text-ink-2 shrink-0">Δ 15m</span>
+                    </div>
+                </div>
+
+                <!-- 3. Elpriser & Tarifplanlægger (DK1 / 8t -> 24t) -->
+                <div class="md:col-span-12 xl:col-span-4 surface-panel p-3 flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-wrap items-center justify-between gap-1.5 pb-2 rule-b">
+                            <div class="flex items-center flex-wrap gap-1.5">
                                 <i class="fas fa-bolt text-warn text-sm"></i>
                                 <h2 class="text-sm font-semibold text-ink">Elpriser DK1</h2>
-                                <span id="energyCurrentBadge" class="badge font-mono-num">Nu: -- kr/kWh</span>
+                                <span id="energyCurrentBadge" class="badge font-mono-num">Nu: -- kr</span>
                                 <span id="energyCheapestBadge" class="badge badge-low font-mono-num" title="Billigste kommende time i det valgte vindue">Lavest: --</span>
                             </div>
 
-                            <div class="flex items-center gap-1.5">
-                                <button id="tariffToggleBtn" class="btn btn-primary py-1 px-2.5 min-h-[28px]" title="Skift mellem totalpris inkl. N1 tariffer/moms og rå spotpris">
-                                    Inkl. tariffer
+                            <div class="flex items-center gap-1">
+                                <button id="tariffToggleBtn" class="btn btn-primary py-0.5 px-2 min-h-[26px]" title="Skift mellem totalpris inkl. N1 tariffer/moms og rå spotpris">
+                                    Inkl. tarif
                                 </button>
-                                <button id="hoursToggleBtn" class="btn py-1 px-2.5 min-h-[28px]" title="Skift mellem næste 8 timer og 24 timer">
-                                    Vis 24t
+                                <button id="hoursToggleBtn" class="btn py-0.5 px-2 min-h-[26px]" title="Skift mellem næste 8 timer og 24 timer">
+                                    24t
                                 </button>
                             </div>
                         </div>
 
-                        <div class="flex flex-wrap items-center justify-between gap-2 py-1.5 text-xs text-muted">
-                            <p id="energySubtext">Inkl. N1 nettarif (lav/høj/spids), elafgift & moms</p>
-                            <p id="energyHoverReadout" class="font-mono-num text-ink-2">Hold over en søjle for timepris og tarif</p>
+                        <div class="flex flex-wrap items-center justify-between gap-1 py-1 text-[11px] text-muted">
+                            <p id="energySubtext" class="truncate">Inkl. N1 nettarif, afgift & moms</p>
+                            <p id="energyHoverReadout" class="font-mono-num text-ink-2 truncate">Hold over søjle for pris</p>
                         </div>
                     </div>
 
                     <!-- Interactive 8h / 24h Bar Chart -->
-                    <div id="energyChart" class="flex items-end gap-1 h-28 pt-4 pb-0.5 select-none overflow-x-auto">
+                    <div id="energyChart" class="flex items-end gap-1 h-24 pt-2 pb-0.5 select-none overflow-x-auto">
                         <!-- Søjler genereres dynamisk -->
                     </div>
                 </div>
@@ -530,6 +602,7 @@
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        import { getDatabase, ref as dbRef, query, orderByChild, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCqEJ5yRtTB1KjAG0RmnEsDNiXFJBKwUxo",
@@ -545,6 +618,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const storage = getStorage(app);
+        const rtdb = getDatabase(app);
 
         // State
         let apps = [];
@@ -593,6 +667,7 @@
                 document.getElementById('syncStatus').className = "font-mono-num text-ok";
 
                 startSync(user.uid);
+                startIndoorClimateSync();
             } else {
                 currentUser = null;
                 hasLoadedFromCloud = false;
@@ -1164,6 +1239,9 @@
         const AALBORG = { lat: 57.0488, lon: 9.9217, name: 'Aalborg' };
         let currentCoords = { ...AALBORG };
         let usingGps = false;
+        let latestOutdoorTemp = null;
+        let recentClimatePoints = [];
+        let rtdbUnsubscribe = null;
 
         function wmoToInfo(code) {
             if (code === 0) return { text: 'Klart vejr', icon: 'fa-sun text-warn' };
@@ -1184,10 +1262,11 @@
                 const data = await res.json();
 
                 const cur = data.current;
+                latestOutdoorTemp = typeof cur.temperature_2m === 'number' ? cur.temperature_2m : null;
                 const info = wmoToInfo(cur.weather_code);
                 document.getElementById('weatherLocationTitle').innerText = currentCoords.name;
                 document.getElementById('weatherConditionText').innerText = info.text;
-                document.getElementById('weatherMainIcon').className = `fas ${info.icon} text-base`;
+                document.getElementById('weatherMainIcon').className = `fas ${info.icon} text-sm shrink-0`;
                 document.getElementById('weatherTemp').innerText = `${Math.round(cur.temperature_2m)}°`;
                 document.getElementById('weatherFeelsLike').innerText = `Føles ${Math.round(cur.apparent_temperature)}°`;
                 document.getElementById('weatherWind').innerText = cur.wind_speed_10m.toFixed(1);
@@ -1198,7 +1277,7 @@
                     document.getElementById('sunriseTime').innerText = sr.slice(11, 16);
                     document.getElementById('sunsetTime').innerText = ss.slice(11, 16);
                     const diffMin = Math.round((new Date(ss) - new Date(sr)) / 60000);
-                    document.getElementById('daylightDelta').innerText = `Dagens længde: ${Math.floor(diffMin / 60)}t ${diffMin % 60}m`;
+                    document.getElementById('daylightDelta').innerText = `Dag: ${Math.floor(diffMin / 60)}t ${diffMin % 60}m`;
                 }
 
                 const startIdx = new Date().getHours();
@@ -1216,19 +1295,184 @@
                     sum8hPrecip += hPrecip;
 
                     const cell = document.createElement('div');
-                    cell.className = 'flex flex-col items-center py-1 rounded surface-card';
+                    cell.className = 'flex flex-col items-center py-0.5 rounded surface-card';
                     cell.innerHTML = `
                         <span class="text-[10px] text-muted font-mono-num">${i === 0 ? 'Nu' : hTime}</span>
-                        <i class="fas ${hInfo.icon} text-xs my-1"></i>
-                        <span class="text-xs font-semibold font-mono-num text-ink">${hTemp}°</span>
-                        <span class="text-[9px] font-mono-num text-accent h-3">${hPrecip > 0 ? hPrecip.toFixed(1) : ''}</span>
+                        <i class="fas ${hInfo.icon} text-[11px] my-0.5"></i>
+                        <span class="text-[11px] font-semibold font-mono-num text-ink">${hTemp}°</span>
+                        <span class="text-[9px] font-mono-num text-accent h-3 leading-none">${hPrecip > 0 ? hPrecip.toFixed(1) : ''}</span>
                     `;
                     strip.appendChild(cell);
                 }
                 document.getElementById('weatherPrecip').innerText = `${cur.precipitation.toFixed(1)} / ${sum8hPrecip.toFixed(1)}`;
+                renderIndoorClimate();
             } catch (e) {
                 console.error(e);
                 document.getElementById('weatherConditionText').innerText = 'Vejrdata utilgængelig';
+            }
+        }
+
+        // --- INDEKLIMA LIVE (Fra Indeklima-centralen via fælles Firebase RTDB `klima`) ---
+        function getRecommendedHumidity(outTemp) {
+            if (outTemp === null || Number.isNaN(outTemp)) {
+                return { range: '40–50%', min: 40, max: 50, reason: 'Standard komfortinterval' };
+            }
+            if (outTemp <= -5) return { range: '30–40%', min: 30, max: 40, reason: 'Frost ude: Hold fugten lav' };
+            if (outTemp <= 5) return { range: '35–45%', min: 35, max: 45, reason: 'Koldt ude: Undgå kondens' };
+            if (outTemp <= 15) return { range: '40–50%', min: 40, max: 50, reason: 'Køligt vejr ude' };
+            return { range: '40–60%', min: 40, max: 60, reason: 'Lunt vejr ude' };
+        }
+        console.assert(getRecommendedHumidity(2).range === '35–45%', 'Anbefalet luftfugtighed ved 2°C fejl');
+
+        function formatTrendIndicator(delta, threshold, decimals, unit, warnHigh = false) {
+            if (delta === null || Number.isNaN(delta)) {
+                return { text: '→', cls: 'text-muted', title: 'Ingen historik endnu' };
+            }
+            const abs = Math.abs(delta);
+            const formatted = decimals > 0
+                ? Math.abs(delta).toFixed(decimals).replace('.', ',')
+                : String(Math.round(Math.abs(delta)));
+
+            if (abs < threshold) {
+                return {
+                    text: `→ 0${unit}`,
+                    cls: 'text-muted',
+                    title: `Stabil (${delta >= 0 ? '+' : '-'}${formatted}${unit})`
+                };
+            }
+            if (delta > 0) {
+                return {
+                    text: `↑ +${formatted}${unit}`,
+                    cls: warnHigh ? 'text-warn' : 'text-accent',
+                    title: `Stigende (+${formatted}${unit})`
+                };
+            }
+            return {
+                text: `↓ -${formatted}${unit}`,
+                cls: 'text-ok',
+                title: `Faldende (-${formatted}${unit})`
+            };
+        }
+
+        function renderIndoorClimate() {
+            const rec = getRecommendedHumidity(latestOutdoorTemp);
+            document.getElementById('indoorRecHum').innerText = rec.range;
+
+            if (latestOutdoorTemp !== null) {
+                document.getElementById('indoorTempSub').innerText = `Ude: ${latestOutdoorTemp.toFixed(1).replace('.', ',')}°C`;
+            }
+
+            if (!recentClimatePoints.length) return;
+
+            const latest = recentClimatePoints[recentClimatePoints.length - 1];
+            const baseline = recentClimatePoints[0];
+
+            const co2 = Math.round(Number(latest.co2) || 0);
+            const temp = Number(latest.temperatur) || 0;
+            const hum = Math.round(Number(latest.luftfugtighed) || 0);
+            const ts = Number(latest.timestamp) || Date.now();
+
+            document.getElementById('indoorCo2Val').innerText = String(co2);
+            document.getElementById('indoorTempVal').innerText = temp.toFixed(1).replace('.', ',');
+            document.getElementById('indoorHumVal').innerText = String(hum);
+
+            // Tidsstempel og friskhed
+            const d = new Date(ts);
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            const ageMin = Math.max(0, Math.round((Date.now() - ts) / 60000));
+            document.getElementById('indoorUpdatedTime').innerText = `${hh}:${mm}`;
+            document.getElementById('indoorTimeBadge').title = ageMin <= 1
+                ? `Målt lige nu (kl. ${hh}:${mm})`
+                : `Sidst målt for ${ageMin} min. siden (kl. ${hh}:${mm})`;
+
+            // Beregn trends over vinduet (typisk ~15 min)
+            const spanMin = Math.max(1, Math.round(((Number(latest.timestamp) || ts) - (Number(baseline.timestamp) || ts)) / 60000));
+            document.getElementById('indoorTrendWindow').innerText = recentClimatePoints.length > 1 ? `Δ ${spanMin}m` : 'Live';
+
+            const deltaCo2 = recentClimatePoints.length > 1 ? (co2 - (Number(baseline.co2) || co2)) : 0;
+            const deltaTemp = recentClimatePoints.length > 1 ? (temp - (Number(baseline.temperatur) || temp)) : 0;
+            const deltaHum = recentClimatePoints.length > 1 ? (hum - (Number(baseline.luftfugtighed) || hum)) : 0;
+
+            const co2Trend = formatTrendIndicator(deltaCo2, 15, 0, '', co2 >= 800);
+            const tempTrend = formatTrendIndicator(deltaTemp, 0.15, 1, '°', temp >= 24.5);
+            const humTrend = formatTrendIndicator(deltaHum, 1, 0, '%', hum > rec.max);
+
+            const co2TrendEl = document.getElementById('indoorCo2Trend');
+            co2TrendEl.innerText = co2Trend.text;
+            co2TrendEl.className = `text-[10px] font-mono-num font-semibold ${co2Trend.cls}`;
+            co2TrendEl.title = `CO₂ ${co2Trend.title.toLowerCase()} de seneste ${spanMin} min`;
+
+            const tempTrendEl = document.getElementById('indoorTempTrend');
+            tempTrendEl.innerText = tempTrend.text;
+            tempTrendEl.className = `text-[10px] font-mono-num font-semibold ${tempTrend.cls}`;
+            tempTrendEl.title = `Temperatur ${tempTrend.title.toLowerCase()} de seneste ${spanMin} min`;
+
+            const humTrendEl = document.getElementById('indoorHumTrend');
+            humTrendEl.innerText = humTrend.text;
+            humTrendEl.className = `text-[10px] font-mono-num font-semibold ${humTrend.cls}`;
+            humTrendEl.title = `Luftfugtighed ${humTrend.title.toLowerCase()} de seneste ${spanMin} min`;
+
+            // CO2 undertekst & farve
+            const co2Sub = document.getElementById('indoorCo2Sub');
+            const co2ValEl = document.getElementById('indoorCo2Val');
+            if (co2 > 1000) {
+                co2Sub.innerText = 'Høj (>1000)';
+                co2ValEl.className = 'text-base sm:text-lg font-bold font-mono-num text-danger';
+            } else if (co2 >= 800) {
+                co2Sub.innerText = 'Moderat (<1000)';
+                co2ValEl.className = 'text-base sm:text-lg font-bold font-mono-num text-warn';
+            } else {
+                co2Sub.innerText = 'Frisk (<800)';
+                co2ValEl.className = 'text-base sm:text-lg font-bold font-mono-num text-ink';
+            }
+
+            // Overordnet status-badge & bund-anbefaling
+            const statusBadge = document.getElementById('indoorStatusBadge');
+            const adviceEl = document.getElementById('indoorAdviceText');
+            const isStale = ageMin > 20;
+
+            if (isStale) {
+                statusBadge.innerText = `Offline (${ageMin}m)`;
+                statusBadge.className = 'badge font-mono-num';
+                adviceEl.innerText = `Ingen ny måling i ${ageMin} min · ${rec.reason}`;
+            } else if (co2 > 1000 || hum > 65) {
+                statusBadge.innerText = 'Luft ud';
+                statusBadge.className = 'badge badge-high font-mono-num';
+                adviceEl.innerText = co2 > 1000
+                    ? `CO₂ over 1000 ppm – luft ud i 5–10 min`
+                    : `Fugt over 65% – luft ud (${rec.reason.toLowerCase()})`;
+            } else if (co2 >= 800 || temp > 25 || hum > rec.max + 5) {
+                statusBadge.innerText = 'Moderat';
+                statusBadge.className = 'badge badge-mid font-mono-num';
+                adviceEl.innerText = `${rec.reason} (anb. RF ${rec.range})`;
+            } else {
+                statusBadge.innerText = 'God luft';
+                statusBadge.className = 'badge badge-low font-mono-num';
+                adviceEl.innerText = `${rec.reason} (anb. RF ${rec.range})`;
+            }
+        }
+
+        function startIndoorClimateSync() {
+            if (rtdbUnsubscribe) rtdbUnsubscribe();
+            try {
+                const climateQuery = query(dbRef(rtdb, 'klima'), orderByChild('timestamp'), limitToLast(16));
+                rtdbUnsubscribe = onValue(climateQuery, (snapshot) => {
+                    const pts = [];
+                    snapshot.forEach((child) => {
+                        const val = child.val();
+                        if (val && typeof val === 'object') pts.push(val);
+                    });
+                    pts.sort((a, b) => (Number(a.timestamp) || 0) - (Number(b.timestamp) || 0));
+                    recentClimatePoints = pts;
+                    renderIndoorClimate();
+                }, (err) => {
+                    console.error('Indeklima RTDB fejl:', err);
+                    document.getElementById('indoorStatusBadge').innerText = 'Ingen adgang';
+                    document.getElementById('indoorAdviceText').innerText = 'Kunne ikke hente live indeklimadata';
+                });
+            } catch (e) {
+                console.error(e);
             }
         }
 
@@ -1262,26 +1506,26 @@
         let includeTariffs = true;
         let show24Hours = false;
 
-        // shortcut: hardcoded 2025/2026 N1 (Aalborg) Tarifmodel 3.0 & Energinet rates, update if switching net company
+        // shortcut: hardcoded 2026 N1 (Aalborg) Tarifmodel 3.0, Energinet & Elafgift rates (ex. VAT), update if switching net company
         function getTariffBand(isoTime) {
             const d = new Date(isoTime);
             const m = d.getMonth();
             const h = d.getHours();
             const isWinter = m >= 9 || m <= 2;
-            if (h < 6) return { name: 'Lavlast', net: 0.15 };
-            if (h >= 17 && h < 21) return { name: 'Spidslast', net: isWinter ? 1.35 : 0.60 };
-            return { name: 'Højlast', net: isWinter ? 0.45 : 0.23 };
+            if (h < 6) return { name: 'Lavlast', net: 0.0879 };
+            if (h >= 17 && h < 21) return { name: 'Spidslast', net: isWinter ? 0.7907 : 0.3426 };
+            return { name: 'Højlast', net: isWinter ? 0.2636 : 0.1318 };
         }
 
         function calcEnergyPrice(spotDkk, isoTime) {
             if (!includeTariffs) return spotDkk;
             const band = getTariffBand(isoTime);
-            const elafgift = 0.761;
-            const systemTariff = 0.132;
+            const elafgift = 0.008;
+            const systemTariff = 0.115;
             return (spotDkk + band.net + elafgift + systemTariff) * 1.25;
         }
 
-        console.assert(calcEnergyPrice(1.0, '2026-11-07T18:00:00+01:00') > 3.5, 'Spidslast tarif-beregning fejl');
+        console.assert(Math.abs(calcEnergyPrice(1.0, '2026-11-07T18:00:00+01:00') - 2.392) < 0.01, 'Spidslast tarif-beregning fejl');
 
         function formatDatePath(d) {
             const yyyy = d.getFullYear();
@@ -1334,8 +1578,8 @@
 
             if (curItem) {
                 const badge = document.getElementById('energyCurrentBadge');
-                const lowThresh = includeTariffs ? 2.2 : 0.7;
-                const midThresh = includeTariffs ? 3.2 : 1.5;
+                const lowThresh = includeTariffs ? 1.2 : 0.7;
+                const midThresh = includeTariffs ? 2.2 : 1.5;
                 badge.innerText = `Nu: ${curItem.price.toFixed(2).replace('.', ',')} kr`;
                 badge.className = `badge font-mono-num ${curItem.price < lowThresh ? 'badge-low' : curItem.price < midThresh ? 'badge-mid' : 'badge-high'}`;
             }
@@ -1351,8 +1595,8 @@
             items.forEach(item => {
                 const pct = Math.max(14, Math.round((item.price / maxP) * 100));
                 const hh = String(item.time.getHours()).padStart(2, '0');
-                const lowThresh = includeTariffs ? 2.2 : 0.7;
-                const midThresh = includeTariffs ? 3.2 : 1.5;
+                const lowThresh = includeTariffs ? 1.2 : 0.7;
+                const midThresh = includeTariffs ? 2.2 : 1.5;
                 const barColor = item.price < lowThresh ? 'bar-low' : item.price < midThresh ? 'bar-mid' : 'bar-high';
                 const isCheapest = minItem && item.time.getTime() === minItem.time.getTime();
 
@@ -1373,25 +1617,27 @@
         document.getElementById('tariffToggleBtn').addEventListener('click', (e) => {
             includeTariffs = !includeTariffs;
             const btn = e.currentTarget;
-            btn.innerText = includeTariffs ? 'Inkl. tariffer' : 'Rå spotpris';
+            btn.innerText = includeTariffs ? 'Inkl. tarif' : 'Rå spot';
             btn.className = includeTariffs
-                ? 'btn btn-primary py-1 px-2.5 min-h-[28px]'
-                : 'btn py-1 px-2.5 min-h-[28px]';
+                ? 'btn btn-primary py-0.5 px-2 min-h-[26px]'
+                : 'btn py-0.5 px-2 min-h-[26px]';
             document.getElementById('energySubtext').innerText = includeTariffs
-                ? 'Inkl. N1 nettarif (lav/høj/spids), elafgift & moms'
-                : 'Kun rå Nord Pool spotpris (ekskl. afgifter)';
+                ? 'Inkl. N1 nettarif, afgift & moms'
+                : 'Rå Nord Pool spotpris (ekskl. afgifter)';
             renderEnergyChart();
         });
 
         document.getElementById('hoursToggleBtn').addEventListener('click', (e) => {
             show24Hours = !show24Hours;
-            e.currentTarget.innerText = show24Hours ? 'Vis 8t' : 'Vis 24t';
+            e.currentTarget.innerText = show24Hours ? '8t' : '24t';
             renderEnergyChart();
         });
 
         loadWeather();
         loadEnergyPrices();
+        startIndoorClimateSync();
         setInterval(() => { loadWeather(); loadEnergyPrices(); }, 15 * 60 * 1000);
+        setInterval(() => { renderIndoorClimate(); }, 60 * 1000);
 
     </script>
 </body>
