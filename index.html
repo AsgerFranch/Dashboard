@@ -313,6 +313,9 @@
                     <button id="addAppBtnHeader" class="btn btn-primary hidden">
                         <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tilføj genvej</span>
                     </button>
+                    <button id="syncGithubBtn" class="btn" title="Hent nye hostede apps fra GitHub uden at slette eksisterende">
+                        <i class="fab fa-github"></i> <span class="hidden sm:inline">Opdater apps</span>
+                    </button>
                     <button id="toggleEditBtn" class="btn">
                         <i class="fas fa-sliders"></i> <span class="hidden sm:inline">Rediger</span>
                     </button>
@@ -489,12 +492,15 @@
                     <input type="text" id="appUrl" required placeholder="https://…" class="input-field font-mono-num">
                 </div>
                 <div>
-                    <label for="appIcon" class="block text-xs font-medium text-ink-2 mb-1">Ikon (FontAwesome klasse)</label>
+                    <label for="appIcon" class="block text-xs font-medium text-ink-2 mb-1">Ikon</label>
                     <div class="flex items-center gap-2">
                         <div class="w-9 h-9 rounded-lg surface-panel flex items-center justify-center shrink-0">
                             <i id="iconPreview" class="fas fa-chart-line text-ink-2 text-sm"></i>
                         </div>
-                        <input type="text" id="appIcon" placeholder="fas fa-chart-line" class="input-field font-mono-num">
+                        <input type="text" id="appIcon" placeholder="Vælg ikon herunder eller skriv klasse" class="input-field font-mono-num">
+                    </div>
+                    <div id="iconPickerGrid" class="grid grid-cols-8 gap-1.5 mt-2 p-2 surface-panel max-h-32 overflow-y-auto">
+                        <!-- Lokale ikoner genereres dynamisk -->
                     </div>
                 </div>
                 <div>
@@ -548,12 +554,19 @@
         let firestoreUnsubscribe = null;
         let isLoginMode = true;
         let searchQuery = '';
+        let hasLoadedFromCloud = false;
 
-        const defaultApps = [
-            { id: '1', title: 'Stocks', description: 'Shares of public companies', url: '#', icon: 'fas fa-chart-line', imageUrl: '' },
-            { id: '2', title: 'Mutual funds', description: 'Ready-made portfolios at affordable prices', url: '#', icon: 'fas fa-chart-pie', imageUrl: '' },
-            { id: '3', title: 'Currency', description: 'Currency trading at the exchange rate', url: '#', icon: 'fas fa-coins', imageUrl: '' },
-            { id: '4', title: 'Bonds', description: 'Lend your funds to companies', url: '#', icon: 'fas fa-file-invoice-dollar', imageUrl: '' }
+        const GITHUB_USER = 'AsgerFranch';
+        const DUMMY_TITLES = new Set(['Stocks', 'Mutual funds', 'Currency', 'Bonds']);
+        const isDummyApp = (a) => a && DUMMY_TITLES.has(a.title) && (!a.url || a.url === '#');
+
+        const ICON_CHOICES = [
+            'fas fa-seedling', 'fas fa-ruler-combined', 'fas fa-temperature-half', 'fas fa-wand-magic-sparkles',
+            'fas fa-diagram-project', 'fas fa-note-sticky', 'fas fa-calendar-check', 'fas fa-building',
+            'fas fa-bolt', 'fas fa-layer-group', 'fas fa-tags', 'fas fa-cart-shopping',
+            'fas fa-champagne-glasses', 'fas fa-chart-line', 'fas fa-calculator', 'fas fa-code',
+            'fas fa-database', 'fas fa-book', 'fas fa-compass', 'fas fa-house',
+            'fas fa-briefcase', 'fas fa-graduation-cap', 'fas fa-wrench', 'fab fa-github'
         ];
 
         const defaultTodos = [
@@ -576,12 +589,13 @@
                 authView.classList.remove('flex');
                 dashboardView.classList.remove('hidden');
 
-                document.getElementById('userStatusText').innerText = "Synkroniseret";
+                document.getElementById('userStatusText').innerText = user.email || "Synkroniseret";
                 document.getElementById('syncStatus').className = "font-mono-num text-ok";
 
                 startSync(user.uid);
             } else {
                 currentUser = null;
+                hasLoadedFromCloud = false;
                 authView.classList.remove('hidden');
                 authView.classList.add('flex');
                 dashboardView.classList.add('hidden');
@@ -618,23 +632,130 @@
 
         document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
 
+        const localBackupKey = (uid) => `dashboard_apps_${uid}`;
+
+        function guessRepoIcon(name, title = '') {
+            const s = `${name} ${title}`.toLowerCase();
+            if (s.includes('plante')) return 'fas fa-seedling';
+            if (s.includes('skala')) return 'fas fa-ruler-combined';
+            if (s.includes('klima')) return 'fas fa-temperature-half';
+            if (s.includes('ai') || s.includes('render')) return 'fas fa-wand-magic-sparkles';
+            if (s.includes('pcp') || s.includes('plot')) return 'fas fa-diagram-project';
+            if (s.includes('prompt') || s.includes('noter')) return 'fas fa-note-sticky';
+            if (s.includes('habit')) return 'fas fa-calendar-check';
+            if (s.includes('bsim') || s.includes('be18')) return 'fas fa-building';
+            if (s.includes('materiale')) return 'fas fa-layer-group';
+            if (s.includes('tilbud') || s.includes('rema')) return 'fas fa-tags';
+            if (s.includes('indkoeb') || s.includes('indkøb')) return 'fas fa-cart-shopping';
+            if (s.includes('promille') || s.includes('party')) return 'fas fa-champagne-glasses';
+            return 'fas fa-compass';
+        }
+
+        function normalizeUrlKey(url) {
+            return (url || '').trim().toLowerCase()
+                .replace(/^https?:\/\/asgerfranch\.github\.io\/?/i, '')
+                .replace(/^\/+|\/+$/g, '');
+        }
+        console.assert(normalizeUrlKey('https://asgerfranch.github.io/Plante-Organisation/') === normalizeUrlKey('/plante-organisation/'), 'URL key normalisering fejl');
+        console.assert(isDummyApp({ title: 'Stocks', url: '#' }) && !isDummyApp({ title: 'Stocks', url: 'https://nordnet.dk' }), 'Dummy-app filter fejl');
+
+        async function syncGithubApps(silent = false) {
+            const btn = document.getElementById('syncGithubBtn');
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-rotate fa-spin"></i> <span class="hidden sm:inline">Henter…</span>';
+
+            try {
+                // shortcut: 100 public repos per page via unauthenticated GitHub REST API (60 req/hr limit)
+                const res = await fetch(`https://api.github.com/users/${GITHUB_USER}/repos?per_page=100&sort=created&direction=asc`);
+                if (!res.ok) throw new Error('GitHub API fejlede');
+                const repos = await res.json();
+                const hosted = repos.filter(r => r.has_pages && r.name.toLowerCase() !== 'dashboard');
+
+                const cleaned = apps.filter(a => !isDummyApp(a));
+                const hadDummy = cleaned.length !== apps.length;
+                apps = cleaned;
+
+                const existingKeys = new Set(apps.map(a => normalizeUrlKey(a.url)));
+                const missing = hosted.filter(r => !existingKeys.has(r.name.toLowerCase()));
+
+                const newEntries = await Promise.all(missing.map(async (r, i) => {
+                    let title = r.name.replace(/-/g, ' ');
+                    try {
+                        const branch = r.default_branch || 'main';
+                        const htmlRes = await fetch(`https://raw.githubusercontent.com/${GITHUB_USER}/${r.name}/${branch}/index.html`);
+                        if (htmlRes.ok) {
+                            const html = await htmlRes.text();
+                            const m = html.match(/<title>([^<]+)<\/title>/i);
+                            if (m && m[1].trim()) {
+                                const txt = document.createElement('textarea');
+                                txt.innerHTML = m[1].trim();
+                                title = txt.value.split(/\s+[|\-–]\s+/)[0].trim();
+                            }
+                        }
+                    } catch (_) {}
+                    return {
+                        id: `${Date.now()}_${i}`,
+                        title,
+                        description: r.description || `/${r.name}/`,
+                        url: `https://asgerfranch.github.io/${r.name}/`,
+                        icon: guessRepoIcon(r.name, title),
+                        imageUrl: ''
+                    };
+                }));
+
+                if (newEntries.length > 0 || hadDummy) {
+                    apps.push(...newEntries);
+                    renderApps();
+                    await saveAppsToFirestore();
+                }
+
+                btn.innerHTML = `<i class="fas fa-check text-ok"></i> <span class="hidden sm:inline">${newEntries.length ? `+${newEntries.length} nye` : 'Opdateret'}</span>`;
+                setTimeout(() => { btn.innerHTML = origHtml; btn.disabled = false; }, 1800);
+            } catch (err) {
+                console.error(err);
+                if (!silent) alert('Kunne ikke hente GitHub-apps lige nu.');
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('syncGithubBtn').addEventListener('click', () => syncGithubApps(false));
+
         function startSync(uid) {
             const userDocRef = doc(db, 'users', uid);
             firestoreUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
+                const localApps = JSON.parse(localStorage.getItem(localBackupKey(uid)) || '[]').filter(a => !isDummyApp(a));
+                hasLoadedFromCloud = true;
+
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    apps = data.apps || [];
+                    const rawApps = Array.isArray(data.apps) ? data.apps : [];
+                    const validApps = rawApps.filter(a => !isDummyApp(a));
                     todos = data.todos || [];
 
-                    if (!data.todos && data.apps) {
+                    if (validApps.length > 0) {
+                        apps = validApps;
+                        localStorage.setItem(localBackupKey(uid), JSON.stringify(apps));
+                        if (validApps.length !== rawApps.length) saveAppsToFirestore();
+                    } else if (localApps.length > 0) {
+                        apps = localApps;
+                        saveAppsToFirestore();
+                    } else {
+                        apps = [];
+                        syncGithubApps(true);
+                    }
+
+                    if (!data.todos) {
                         todos = [...defaultTodos];
                         saveTodosToFirestore();
                     }
                 } else {
-                    apps = [...defaultApps];
+                    apps = localApps;
                     todos = [...defaultTodos];
-                    saveAppsToFirestore();
                     saveTodosToFirestore();
+                    if (apps.length > 0) saveAppsToFirestore();
+                    else syncGithubApps(true);
                 }
                 renderApps();
                 renderTodos();
@@ -644,7 +765,8 @@
         }
 
         async function saveAppsToFirestore() {
-            if (!currentUser) return;
+            if (!currentUser || !hasLoadedFromCloud) return;
+            localStorage.setItem(localBackupKey(currentUser.uid), JSON.stringify(apps));
             try { await setDoc(doc(db, 'users', currentUser.uid), { apps }, { merge: true }); }
             catch (error) { console.error(error); }
         }
@@ -843,6 +965,25 @@
             if (app) openAppModal(app);
         };
 
+        const iconPickerGrid = document.getElementById('iconPickerGrid');
+        function renderIconPicker(selectedIcon) {
+            iconPickerGrid.innerHTML = '';
+            ICON_CHOICES.forEach(cls => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const isSelected = (selectedIcon || 'fas fa-chart-line').trim() === cls;
+                btn.className = `btn btn-icon-sm ${isSelected ? 'btn-active-mode' : ''}`;
+                btn.title = cls;
+                btn.innerHTML = `<i class="${cls} text-xs"></i>`;
+                btn.onclick = () => {
+                    document.getElementById('appIcon').value = cls;
+                    document.getElementById('iconPreview').className = `${cls} text-ink-2 text-sm`;
+                    renderIconPicker(cls);
+                };
+                iconPickerGrid.appendChild(btn);
+            });
+        }
+
         function openAppModal(app = null) {
             const currentImagePreview = document.getElementById('currentImagePreview');
             const currentImageImg = document.getElementById('currentImageImg');
@@ -858,7 +999,8 @@
                 document.getElementById('appDescription').value = app.description || '';
                 document.getElementById('appUrl').value = app.url;
                 document.getElementById('appIcon').value = app.icon || '';
-                document.getElementById('iconPreview').className = app.icon || 'fas fa-chart-line';
+                document.getElementById('iconPreview').className = `${app.icon || 'fas fa-chart-line'} text-ink-2 text-sm`;
+                renderIconPicker(app.icon || 'fas fa-chart-line');
 
                 if (app.imageUrl) {
                     existingImageUrl.value = app.imageUrl;
@@ -876,7 +1018,9 @@
                 existingImageUrl.value = '';
                 currentImageImg.src = EMPTY_PIXEL;
                 currentImagePreview.classList.add('hidden');
-                document.getElementById('iconPreview').className = 'fas fa-chart-line text-ink-2 text-sm';
+                document.getElementById('appIcon').value = 'fas fa-compass';
+                document.getElementById('iconPreview').className = 'fas fa-compass text-ink-2 text-sm';
+                renderIconPicker('fas fa-compass');
             }
             appModal.classList.remove('opacity-0', 'pointer-events-none');
             appModalContent.classList.remove('scale-95');
@@ -896,7 +1040,9 @@
         });
 
         document.getElementById('appIcon').addEventListener('input', (e) => {
-            document.getElementById('iconPreview').className = e.target.value || 'fas fa-chart-line text-ink-2 text-sm';
+            const val = e.target.value || 'fas fa-chart-line';
+            document.getElementById('iconPreview').className = `${val} text-ink-2 text-sm`;
+            renderIconPicker(val);
         });
 
         appFormDom.addEventListener('submit', async (e) => {
@@ -943,6 +1089,7 @@
         });
 
         window.deleteApp = (id) => {
+            if (!confirm('Slet denne genvej?')) return;
             apps = apps.filter(app => app.id !== id);
             saveAppsToFirestore();
         };
