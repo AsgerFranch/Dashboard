@@ -633,6 +633,8 @@
         const GITHUB_USER = 'AsgerFranch';
         const DUMMY_TITLES = new Set(['Stocks', 'Mutual funds', 'Currency', 'Bonds']);
         const isDummyApp = (a) => a && DUMMY_TITLES.has(a.title) && (!a.url || a.url === '#');
+        const DUMMY_TODOS = new Set(['Tjek markedets åbningstider', 'Gennemgå porteføljeudbytte']);
+        const isDummyTodo = (t) => t && DUMMY_TODOS.has((t.text || '').trim());
 
         const ICON_CHOICES = [
             'fas fa-seedling', 'fas fa-ruler-combined', 'fas fa-temperature-half', 'fas fa-wand-magic-sparkles',
@@ -641,11 +643,6 @@
             'fas fa-champagne-glasses', 'fas fa-chart-line', 'fas fa-calculator', 'fas fa-code',
             'fas fa-database', 'fas fa-book', 'fas fa-compass', 'fas fa-house',
             'fas fa-briefcase', 'fas fa-graduation-cap', 'fas fa-wrench', 'fab fa-github'
-        ];
-
-        const defaultTodos = [
-            { text: "Tjek markedets åbningstider", completed: false },
-            { text: "Gennemgå porteføljeudbytte", completed: false }
         ];
 
         const authView = document.getElementById('authView');
@@ -671,6 +668,10 @@
             } else {
                 currentUser = null;
                 hasLoadedFromCloud = false;
+                apps = [];
+                todos = [];
+                renderApps();
+                renderTodos();
                 authView.classList.remove('hidden');
                 authView.classList.add('flex');
                 dashboardView.classList.add('hidden');
@@ -708,6 +709,18 @@
         document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
 
         const localBackupKey = (uid) => `dashboard_apps_${uid}`;
+        const localTodosBackupKey = (uid) => `dashboard_todos_${uid}`;
+        const localTodosUpdatedKey = (uid) => `dashboard_todos_ts_${uid}`;
+        const readLocalTodos = (uid) => {
+            const raw = localStorage.getItem(localTodosBackupKey(uid));
+            if (raw === null) return null;
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed.filter(t => !isDummyTodo(t)) : null;
+            } catch (_) {
+                return null;
+            }
+        };
 
         function guessRepoIcon(name, title = '') {
             const s = `${name} ${title}`.toLowerCase();
@@ -733,6 +746,7 @@
         }
         console.assert(normalizeUrlKey('https://asgerfranch.github.io/Plante-Organisation/') === normalizeUrlKey('/plante-organisation/'), 'URL key normalisering fejl');
         console.assert(isDummyApp({ title: 'Stocks', url: '#' }) && !isDummyApp({ title: 'Stocks', url: 'https://nordnet.dk' }), 'Dummy-app filter fejl');
+        console.assert(isDummyTodo({ text: 'Tjek markedets åbningstider' }) && !isDummyTodo({ text: 'Køb mælk' }), 'Dummy-todo filter fejl');
 
         async function syncGithubApps(silent = false) {
             const btn = document.getElementById('syncGithubBtn');
@@ -798,16 +812,28 @@
         document.getElementById('syncGithubBtn').addEventListener('click', () => syncGithubApps(false));
 
         function startSync(uid) {
+            const initialApps = JSON.parse(localStorage.getItem(localBackupKey(uid)) || '[]').filter(a => !isDummyApp(a));
+            const initialTodos = readLocalTodos(uid);
+            if (initialApps.length > 0) {
+                apps = initialApps;
+                renderApps();
+            }
+            if (initialTodos !== null) {
+                todos = initialTodos;
+                renderTodos();
+            }
+
             const userDocRef = doc(db, 'users', uid);
             firestoreUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
                 const localApps = JSON.parse(localStorage.getItem(localBackupKey(uid)) || '[]').filter(a => !isDummyApp(a));
+                const localTodos = readLocalTodos(uid);
+                const localTodosTs = Number(localStorage.getItem(localTodosUpdatedKey(uid)) || 0);
                 hasLoadedFromCloud = true;
 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     const rawApps = Array.isArray(data.apps) ? data.apps : [];
                     const validApps = rawApps.filter(a => !isDummyApp(a));
-                    todos = data.todos || [];
 
                     if (validApps.length > 0) {
                         apps = validApps;
@@ -821,13 +847,26 @@
                         syncGithubApps(true);
                     }
 
-                    if (!data.todos) {
-                        todos = [...defaultTodos];
+                    const hasCloudTodos = Array.isArray(data.todos);
+                    const rawTodos = hasCloudTodos ? data.todos : [];
+                    const validTodos = rawTodos.filter(t => !isDummyTodo(t));
+                    const cloudTodosTs = Number(data.todosUpdatedAt || 0);
+
+                    if (localTodos !== null && (localTodosTs > cloudTodosTs || !hasCloudTodos)) {
+                        todos = localTodos;
+                        saveTodosToFirestore();
+                    } else if (hasCloudTodos) {
+                        todos = validTodos;
+                        localStorage.setItem(localTodosBackupKey(uid), JSON.stringify(todos));
+                        if (cloudTodosTs) localStorage.setItem(localTodosUpdatedKey(uid), String(cloudTodosTs));
+                        if (validTodos.length !== rawTodos.length) saveTodosToFirestore();
+                    } else {
+                        todos = [];
                         saveTodosToFirestore();
                     }
                 } else {
                     apps = localApps;
-                    todos = [...defaultTodos];
+                    todos = localTodos !== null ? localTodos : [];
                     saveTodosToFirestore();
                     if (apps.length > 0) saveAppsToFirestore();
                     else syncGithubApps(true);
@@ -836,19 +875,27 @@
                 renderTodos();
             }, (error) => {
                 console.error("Kunne ikke lytte til database.", error);
+                hasLoadedFromCloud = true;
+                renderApps();
+                renderTodos();
             });
         }
 
         async function saveAppsToFirestore() {
-            if (!currentUser || !hasLoadedFromCloud) return;
+            if (!currentUser) return;
             localStorage.setItem(localBackupKey(currentUser.uid), JSON.stringify(apps));
+            if (!hasLoadedFromCloud) return;
             try { await setDoc(doc(db, 'users', currentUser.uid), { apps }, { merge: true }); }
             catch (error) { console.error(error); }
         }
 
         async function saveTodosToFirestore() {
             if (!currentUser) return;
-            try { await setDoc(doc(db, 'users', currentUser.uid), { todos }, { merge: true }); }
+            const todosUpdatedAt = Date.now();
+            localStorage.setItem(localTodosBackupKey(currentUser.uid), JSON.stringify(todos));
+            localStorage.setItem(localTodosUpdatedKey(currentUser.uid), String(todosUpdatedAt));
+            if (!hasLoadedFromCloud) return;
+            try { await setDoc(doc(db, 'users', currentUser.uid), { todos, todosUpdatedAt }, { merge: true }); }
             catch (error) { console.error(error); }
         }
 
@@ -1003,21 +1050,27 @@
         }
 
         window.toggleTodo = (index) => {
+            if (!todos[index]) return;
             todos[index].completed = !todos[index].completed;
+            renderTodos();
             saveTodosToFirestore();
         };
 
         window.updateTodo = (index, text) => {
-            if (text.trim() === '') {
+            if (!todos[index]) return;
+            const trimmed = text.trim();
+            if (trimmed === '') {
                 window.deleteTodo(index);
-            } else {
-                todos[index].text = text;
+            } else if (todos[index].text !== trimmed) {
+                todos[index].text = trimmed;
                 saveTodosToFirestore();
             }
         };
 
         window.deleteTodo = (index) => {
+            if (index < 0 || index >= todos.length) return;
             todos.splice(index, 1);
+            renderTodos();
             saveTodosToFirestore();
         };
 
@@ -1025,6 +1078,7 @@
             if (e.key === 'Enter' && e.target.value.trim() !== '') {
                 todos.push({ text: e.target.value.trim(), completed: false });
                 e.target.value = '';
+                renderTodos();
                 saveTodosToFirestore();
             }
         });
