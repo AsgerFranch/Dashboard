@@ -676,6 +676,11 @@
                 authView.classList.add('flex');
                 dashboardView.classList.add('hidden');
                 if (firestoreUnsubscribe) firestoreUnsubscribe();
+                if (rtdbUnsubscribe) {
+                    rtdbUnsubscribe();
+                    rtdbUnsubscribe = null;
+                }
+                recentClimatePoints = [];
             }
         });
 
@@ -1689,7 +1694,6 @@
 
         loadWeather();
         loadEnergyPrices();
-        startIndoorClimateSync();
         setInterval(() => { loadWeather(); loadEnergyPrices(); }, 15 * 60 * 1000);
         setInterval(() => { renderIndoorClimate(); }, 60 * 1000);
 
